@@ -1,0 +1,69 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "git_stash_task",
+			"type": "shell",
+			"command": "git stash",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_pull_task",
+			"type": "shell",
+			"command": "git pull",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_abort_task",
+			"type": "shell",
+			"command": "git merge --abort",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_pull_task_2",
+			"type": "shell",
+			"command": "git pull",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "cleanup_git_task",
+			"type": "shell",
+			"command": "Remove-Item -Path \".git/.MERGE_MSG.swp\" -Force -ErrorAction SilentlyContinue; Remove-Item -Path \".git/MERGE_MSG\" -Force -ErrorAction SilentlyContinue",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_pull_task_3",
+			"type": "shell",
+			"command": "git pull",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_abort_task_2",
+			"type": "shell",
+			"command": "git merge --abort",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		},
+		{
+			"label": "git_pull_final",
+			"type": "shell",
+			"command": "git pull",
+			"args": [],
+			"isBackground": false,
+			"group": "none"
+		}
+	]
+}

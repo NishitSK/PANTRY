@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 12% 96%;
+    /* #F4F6F3 Sage Gray */
+    --foreground: 220 23% 23%;
+    /* #2D3648 Dark Slate */
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 23% 23%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 23% 23%;
+
+    --primary: 125 17% 37%;
+    /* #4F6F52 Olive Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 33 41% 49%;
+    /* #B07A4A Clay Brown */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 120 10% 90%;
+    --muted-foreground: 220 10% 40%;
+
+    --accent: 120 12% 92%;
+    --accent-foreground: 125 17% 37%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 125 17% 37%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 120 10% 10%;
+    /* #171c17 Deep Organic Dark */
+    --foreground: 60 5% 90%;
+    /* #e6e6e3 Warm Off-White */
+
+    --card: 120 8% 14%;
+    /* #212621 Lighter Organic Dark */
+    --card-foreground: 60 5% 90%;
+
+    --popover: 120 8% 14%;
+    --popover-foreground: 60 5% 90%;
+
+    --primary: 125 25% 60%;
+    /* #7ca67f Muted Light Olive */
+    --primary-foreground: 120 10% 10%;
+
+    --secondary: 33 30% 60%;
+    /* #c4a485 Muted Clay */
+    --secondary-foreground: 120 10% 10%;
+
+    --muted: 120 8% 20%;
+    --muted-foreground: 120 5% 65%;
+
+    --accent: 120 8% 20%;
+    --accent-foreground: 60 5% 90%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 5% 90%;
+
+    --border: 120 8% 20%;
+    --input: 120 8% 20%;
+    --ring: 125 25% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.card {
+  @apply rounded-xl bg-card text-card-foreground shadow-sm border;
+}
+
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #2a62e6;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #234fc0;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: hsl(var(--foreground));
+}
+
+.btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+}
+
+.badge-soft {
+  background-color: #d9ecff;
+  color: #234fc0;
+}
+
+.dark .badge-soft {
+  background-color: #1e3a8a;
+  color: #bfdbfe;
+}
+
+.badge-muted {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: hsl(var(--foreground));
+}
+
+.dark .badge-muted {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: hsl(var(--foreground));
+}

@@ -1,0 +1,226 @@
+{
+  "version": "2.7",
+  "children": [
+    {
+      "type": "frame",
+      "id": "TGyG0",
+      "x": 0,
+      "y": 0,
+      "name": "Add Item - Organic",
+      "width": 800,
+      "height": 1200,
+      "fill": "#FDFDFD",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 32,
+      "children": [
+        {
+          "type": "frame",
+          "id": "9iYQr",
+          "name": "header",
+          "width": "fill_container",
+          "children": [
+            {
+              "type": "text",
+              "id": "m8aYO",
+              "name": "title",
+              "fill": "#1F2937",
+              "content": "Add New Item",
+              "fontFamily": "Inter",
+              "fontSize": 24,
+              "fontWeight": "bold"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Mhxpo",
+          "name": "desc",
+          "fill": "#6B7280",
+          "content": "Add groceries to your inventory with smart expiry predictions",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "f0JlH",
+          "name": "formContainer",
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "KghR3",
+              "name": "inputGroup1",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "r1haQ",
+                  "name": "label1",
+                  "fill": "#374151",
+                  "content": "Category",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "o4rWq",
+                  "name": "input1",
+                  "height": 48,
+                  "fill": "#F3F4F6",
+                  "cornerRadius": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yuRaQ",
+                      "name": "inputText1",
+                      "fill": "#9CA3AF",
+                      "content": "Select a category",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DaBt6",
+              "name": "inputGroup2",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T66gI",
+                  "name": "label2",
+                  "fill": "#374151",
+                  "content": "Product Name",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "R3JwE",
+                  "name": "input2",
+                  "height": 48,
+                  "fill": "#F3F4F6",
+                  "cornerRadius": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "USJlt",
+                      "name": "inputText2",
+                      "fill": "#9CA3AF",
+                      "content": "Select a product",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eA52d",
+      "x": 900,
+      "y": 0,
+      "name": "Insights - Organic",
+      "width": 1200,
+      "height": 900,
+      "fill": "#FDFDFD",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 32,
+      "children": [
+        {
+          "type": "frame",
+          "id": "aOqpj",
+          "name": "insightsHeader",
+          "width": "fill_container",
+          "children": [
+            {
+              "type": "text",
+              "id": "Bx4yz",
+              "name": "insightsTitle",
+              "fill": "#1F2937",
+              "content": "Insights & Analytics",
+              "fontFamily": "Inter",
+              "fontSize": 24,
+              "fontWeight": "bold"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M2Ya3",
+          "name": "statsGrid",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rdAWV",
+              "name": "statCard1",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JcdBj",
+                  "name": "statIcon1",
+                  "width": 48,
+                  "height": 48,
+                  "fill": "#ECFDF5",
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "text",
+                  "id": "edNMN",
+                  "name": "statTitle1",
+                  "fill": "#059669",
+                  "content": "TOTAL ITEMS",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "paNSy",
+                  "name": "statValue1",
+                  "fill": "#047857",
+                  "content": "42",
+                  "fontFamily": "Inter",
+                  "fontSize": 36,
+                  "fontWeight": "900"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
