@@ -18,7 +18,7 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen w-72 flex-col bg-card border-r border-border">
+    <div className="hidden md:flex h-screen w-72 flex-col bg-card border-r border-border">
       <div className="flex h-20 items-center gap-3 px-6 border-b border-border/50">
         <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
           <Package className="h-5 w-5 text-primary-foreground" />

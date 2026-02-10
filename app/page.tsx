@@ -129,7 +129,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)] gap-4 overflow-hidden">
+      <div className="flex flex-col min-h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] gap-4 overflow-y-auto md:overflow-hidden">
         {/* Header - Compact */}
         <div className="flex items-center justify-between bg-primary/5 p-4 rounded-xl border border-primary/10 shrink-0">
           <div>
