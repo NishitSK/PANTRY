@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Card from './ui/Card'
-import { Button } from './ui/button'
+import { Button } from './ui/shadcn-button'
 import { getApiBaseUrl } from '@/lib/api'
 
 interface LocationPromptProps {
