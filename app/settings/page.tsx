@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import { getApiBaseUrl } from '@/lib/api'
 import { detectUserCity } from '@/lib/geolocation'
 

@@ -11,7 +11,7 @@ import {
   Sandwich, Coffee, Egg, Scale, FileText, Package
 } from 'lucide-react'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import SectionHeading from '@/components/ui/SectionHeading'
 import CustomSelect, { SelectOption } from '@/components/ui/CustomSelect'
 

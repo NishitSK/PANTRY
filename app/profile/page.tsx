@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import { getApiBaseUrl } from '@/lib/api'
 import { Package, Calendar, MapPin, Banknote, User as UserIcon, Mail, ArrowLeft } from 'lucide-react'
 

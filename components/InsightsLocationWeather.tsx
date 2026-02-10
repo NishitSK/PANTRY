@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import { getApiBaseUrl } from '@/lib/api'
 import { MapPin, Thermometer, Droplets, Clock } from 'lucide-react'
 

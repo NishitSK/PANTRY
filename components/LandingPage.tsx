@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/shadcn-button"
 import ScrollExpandMedia from "@/components/ui/scroll-expansion-hero"
 import { Particles } from "@/components/ui/particles"
 import { useTheme } from "next-themes"

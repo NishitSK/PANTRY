@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 
 export default function LoginPage() {
   const router = useRouter()

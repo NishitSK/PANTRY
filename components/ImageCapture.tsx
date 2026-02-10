@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import { Camera, Image as ImageIcon, X, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 

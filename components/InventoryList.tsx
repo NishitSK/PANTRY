@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 import UrgencyBadge from '@/components/UrgencyBadge'
 import { formatIndianDate } from '@/lib/dateUtils'
 import { getApiBaseUrl } from '@/lib/api'

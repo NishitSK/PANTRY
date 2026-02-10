@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChefHat, X, Utensils, Sparkles, Check } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/shadcn-button'
 
 interface Product {
   name: string
