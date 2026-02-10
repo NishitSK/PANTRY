@@ -5,7 +5,6 @@ export interface IRecipeIngredient {
 }
 
 export interface IRecipe extends Document {
-    _id: string
     title: string
     description: string
     instructions?: string

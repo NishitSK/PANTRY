@@ -258,7 +258,7 @@ export default function SettingsPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6">
               <p className="text-white font-medium text-lg">
-                "Organizing is what you do before you do something, so that when you do it, it is not all mixed up."
+                &quot;Organizing is what you do before you do something, so that when you do it, it is not all mixed up.&quot;
               </p>
             </div>
           </div>

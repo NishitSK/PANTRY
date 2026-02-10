@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IPrediction extends Document {
-    _id: string
     inventoryItemId: string
     predictedExpiry: Date
     modelVersion: string

@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IWeatherSnapshot extends Document {
-    _id: string
     inventoryItemId: string
     capturedAt: Date
     tempC: number

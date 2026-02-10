@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IInventoryItem extends Document {
-    _id: string
     userId: string
     productId: string
     storageMethodId: string

@@ -6,7 +6,9 @@ import Product from '../models/Product'
 import { IProduct } from '../models/Product'
 
 // Load environment variables
-dotenv.config({ path: '.env.local' })
+// Load environment variables
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
+dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
 const MONGODB_URI = process.env.MONGODB_URI
 

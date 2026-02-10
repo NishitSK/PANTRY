@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IStorageMethod extends Document {
-    _id: string
     name: string
     tempRangeMinC: number
     tempRangeMaxC: number
@@ -10,10 +9,7 @@ export interface IStorageMethod extends Document {
 
 const StorageMethodSchema = new Schema<IStorageMethod>(
     {
-        _id: {
-            type: String,
-            required: true,
-        },
+        _id: String,
         name: {
             type: String,
             required: true,

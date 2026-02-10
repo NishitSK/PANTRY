@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IFeedback extends Document {
-    _id: string
     inventoryItemId: string
     userReportedExpiry?: Date
     freshnessScore?: number

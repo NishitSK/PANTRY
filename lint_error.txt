@@ -1,0 +1,50 @@
+﻿
+> pantry-guardian@0.1.0 lint
+> next lint
+
+node.exe : Invalid 
+Options:
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" "C:
+\Users\Acer\AppData\R
+oaming\n ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Invalid   
+  Options::String    
+) [], RemoteExce    
+ption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+- Unknown options: 
+useEslintrc, 
+extensions, resolvePl
+uginsRelativeTo, 
+rulePaths, 
+ignorePath, reportUnu
+sedDisableDirectives
+- 'extensions' has 
+been removed.
+- 'resolvePluginsRela
+tiveTo' has been 
+removed.
+- 'ignorePath' has 
+been removed.
+- 'rulePaths' has 
+been removed. Please 
+define your rules 
+using plugins.
+- 'reportUnusedDisabl
+eDirectives' has 
+been removed. Please 
+use the 'overrideConf
+ig.linterOptions.repo
+rtUnusedDisableDirect
+ives' option instead.

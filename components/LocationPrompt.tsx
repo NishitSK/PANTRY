@@ -100,7 +100,7 @@ export default function LocationPrompt({ onLocationSet }: LocationPromptProps) {
             <div className="text-4xl mb-3">📍</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Pantry Guardian!</h2>
             <p className="text-gray-600">
-              We'll use your location to provide accurate weather-based shelf life predictions.
+              We&apos;ll use your location to provide accurate weather-based shelf life predictions.
             </p>
           </div>
 
