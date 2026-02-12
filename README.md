@@ -6,6 +6,8 @@ Built with **Next.js**, **MongoDB**, and **Tailwind CSS**, it keeps your invento
 
 ![Pantry Guardian Landing Page](/landing-bg-sketch.png)
 
+### 🔗 [Live Demo](https://pantry123.vercel.app)
+
 ## 🚀 Key Features
 
 - **Expiry Tracking**: Get notified before your ingredients expire. The dashboard highlights items nearing their use-by date.
