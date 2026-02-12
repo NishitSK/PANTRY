@@ -1,123 +1,116 @@
-# Pantry Guardian
+# Pantry Guardian 🥑
 
-Pantry Guardian is a full-stack inventory management system that allows users to manage pantry items, track stock levels, and organize storage methods. The project includes a modern Next.js frontend and a dedicated Express backend powered by Prisma.
+**Pantry Guardian** is a smart pantry inventory system designed to help you track expiration dates, reduce food waste, and manage your kitchen effortlessly. 
 
-🔗 Live Demo: https://pantry-guardian.vercel.app/
+Built with **Next.js**, **MongoDB**, and **Tailwind CSS**, it keeps your inventory organized and ensures you never let good food go to bad use.
 
-## Features
-- Add, edit, and delete pantry items  
-- Track categories, quantities, and expiration dates  
-- Manage storage methods (room, fridge, freezer, etc.)  
-- RESTful Express backend  
-- Prisma ORM with migrations  
-- JWT-based authentication support  
-- Next.js App Router frontend  
-- Deployed on Vercel (frontend) and Render (backend)
+![Pantry Guardian Landing Page](/landing-bg-sketch.png)
 
-## Tech Stack
+## 🚀 Key Features
 
-### Frontend
-- Next.js 14  
-- React  
-- TypeScript  
-- Tailwind CSS  
+- **Expiry Tracking**: Get notified before your ingredients expire. The dashboard highlights items nearing their use-by date.
+- **Easy Scanning**: Quickly add items to your inventory. (Upcoming: Barcode and Receipt scanning).
+- **Usage Insights**: Visualize your consumption habits to shop smarter and save money.
+- **Smart Recipes**: Get recipe suggestions based on the ingredients you already have (Coming Soon).
+- **Secure Authentication**: Sign in securely using Google or Email credentials via NextAuth without hassle.
+- **Responsive Design**: precise and beautiful interface optimized for all devices, from desktop to mobile.
 
-### Backend
-- Node.js  
-- Express  
-- Prisma ORM  
-- PostgreSQL / MySQL  
-- JSON Web Tokens  
-- Zod validation  
-- dotenv  
+## 🛠 Tech Stack
 
-### Deployment
-- Vercel — Frontend  
-- Render — Backend  
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+- **Database**: [MongoDB](https://www.mongodb.com/) (using [Mongoose](https://mongoosejs.com/))
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
-## Project Structure
-PANTRY-GUARDIAN/
-├── app/ # Next.js frontend (App Router)
-├── backend/ # Express backend API
-│ ├── server.js
-│ ├── prisma/
-│ ├── routes/
-│ ├── controllers/
-│ └── package.json
-├── prisma/
-├── components/
-├── public/
-├── package.json
-└── README.md
+## 🏁 Getting Started
 
-shell
-Copy code
+Follow these steps to set up the project locally.
 
-## Environment Variables
+### Prerequisites
 
-### Frontend (.env)
-NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [MongoDB](https://www.mongodb.com/) (Local or Atlas)
 
-shell
-Copy code
+### Installation
 
-### Backend (.env)
-DATABASE_URL=your_database_connection_string
-JWT_SECRET=your_jwt_secret
-PORT=5000
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/your-username/pantry-guardian.git
+    cd pantry-guardian
+    ```
 
-shell
-Copy code
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-## Installation
+3.  **Configure Environment Variables**
+    Create a `.env` file in the root directory and add the following variables. You can use `.env.example` as a reference.
 
-### 1. Clone
-git clone https://github.com/NishitSK/PANTRY-GUARDIAN.git
-cd PANTRY-GUARDIAN
+    ```env
+    # Database (MongoDB connection string)
+    DATABASE_URL="mongodb+srv://<username>:<password>@cluster.mongodb.net/pantry-guardian"
 
-makefile
-Copy code
+    # NextAuth Configuration
+    # Generate a secret with `openssl rand -base64 32`
+    NEXTAUTH_SECRET="your-super-secret-key"
+    NEXTAUTH_URL="http://localhost:3000"
 
-### 2. Install Dependencies
-Frontend:
-npm install
+    # Google OAuth (For Google Sign-In)
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
+    
+    # Weather API (Optional, for future features)
+    WEATHER_API_KEY="your-openweathermap-api-key"
+    
+    # Google Gemini AI (Optional, for image analysis)
+    GEMINI_API_KEY="your-gemini-api-key"
+    ```
 
-makefile
-Copy code
-Backend:
-cd backend
-npm install
+4.  **Seed the Database (Optional)**
+    To populate the database with initial data:
+    ```bash
+    npm run seed
+    ```
 
-shell
-Copy code
+5.  **Run the Development Server**
+    ```bash
+    npm run dev
+    ```
 
-### 3. Prisma Setup
-cd backend
-npx prisma generate
-npx prisma migrate dev
-npm run seed # optional
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-makefile
-Copy code
+## 📂 Project Structure
 
-## Development
+```
+├── app/                  # Next.js App Router pages and layouts
+│   ├── api/              # API Routes
+│   ├── auth/             # Authentication pages (Login/Signup)
+│   ├── dashboard/        # Main application dashboard
+│   ├── settings/         # User settings
+│   └── page.tsx          # Landing page
+├── components/           # Reusable UI components
+│   └── ui/               # Shadcn/UI compatible components
+├── lib/                  # Utility functions and configurations
+│   ├── auth.ts           # NextAuth configuration
+│   └── db.ts             # Database connection logic
+├── models/               # Mongoose models (User, InventoryItem, etc.)
+├── public/               # Static assets (images, fonts)
+└── scripts/              # Utility scripts (seeding, maintenance)
+```
 
-Frontend:
-npm run dev
+## 🤝 Contributing
 
-makefile
-Copy code
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Backend:
-cd backend
-npm run dev
+1.  Fork the project
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
-markdown
-Copy code
+## 📄 License
 
-## Production
-- Frontend deployed to Vercel: https://pantry-guardian.vercel.app/  
-- Backend deployed to Render  
-  - Build command: `npm install`  
-  - Start command: `npm start`
-
+This project is open source and available under the [MIT License](LICENSE).
