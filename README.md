@@ -4,7 +4,7 @@
 
 Built with **Next.js**, **MongoDB**, and **Tailwind CSS**, it keeps your inventory organized and ensures you never let good food go to bad use.
 
-![Pantry Guardian Landing Page](/landing-bg-sketch.png)
+http://pantry123.vercel.app
 
 ### 🔗 [Live Demo](https://pantry123.vercel.app)
 
@@ -116,3 +116,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+
