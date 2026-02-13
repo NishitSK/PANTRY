@@ -43,8 +43,8 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section with Sticky Scroll */}
-      <section ref={containerRef} className="relative h-[150vh]">
-        <div className="sticky top-0 h-screen flex flex-col lg:flex-row items-center lg:items-start justify-start lg:justify-center px-6 pt-32 lg:pt-20 pb-20 max-w-7xl mx-auto overflow-hidden">
+      <section ref={containerRef} className="relative h-[180vh] lg:h-[150vh]">
+        <div className="sticky top-0 h-screen flex flex-col lg:flex-row items-center lg:items-start justify-start lg:justify-center px-6 pt-32 lg:pt-20 pb-40 max-w-7xl mx-auto overflow-hidden">
         
         {/* Text Content */}
         <motion.div 
