@@ -34,7 +34,7 @@ export default function LandingPage() {
             <Link href="/auth/login" className="hidden sm:block">
                 <Button variant="ghost" className="font-medium hover:bg-primary/10 hover:text-primary">Log in</Button>
             </Link>
-            <Link href="/auth/register">
+            <Link href="/auth/register" className="hidden sm:block">
                 <Button className="rounded-full px-6 font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20">
                     Get Started
                 </Button>
@@ -53,7 +53,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="flex-1 z-10 text-center lg:text-left space-y-8"
         >
-            <h1 className="font-serif text-6xl md:text-8xl font-medium tracking-tight leading-[0.95] text-foreground">
+            <h1 className="font-serif text-5xl md:text-8xl font-medium tracking-tight leading-[0.95] text-foreground">
                 Reduce Waste. <br/>
                 Save Money. <br/>
                 <span className="text-accent italic">Eat Fresh.</span>
