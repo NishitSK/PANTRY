@@ -23,7 +23,7 @@ export default function LandingPage() {
     <div ref={containerRef} className="min-h-[200vh] bg-background font-sans selection:bg-primary/20">
       
       {/* Navigation / Header */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-6 flex justify-between items-center backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-6 flex justify-between items-center bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-2">
            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
              <Leaf size={16} />
@@ -44,7 +44,7 @@ export default function LandingPage() {
 
       {/* Hero Section with Sticky Scroll */}
       <section ref={containerRef} className="relative h-[150vh]">
-        <div className="sticky top-0 h-screen flex flex-col lg:flex-row items-center lg:items-start justify-center px-6 pt-20 pb-20 max-w-7xl mx-auto overflow-hidden">
+        <div className="sticky top-0 h-screen flex flex-col lg:flex-row items-center lg:items-start justify-start lg:justify-center px-6 pt-32 lg:pt-20 pb-20 max-w-7xl mx-auto overflow-hidden">
         
         {/* Text Content */}
         <motion.div 
@@ -78,7 +78,7 @@ export default function LandingPage() {
         </motion.div>
 
         {/* 3D Banana Animation */}
-        <div className="flex-1 relative w-full h-[50vh] lg:h-auto flex items-center justify-center">
+        <div className="flex-1 relative w-full h-[40vh] lg:h-auto flex items-center justify-center">
              {/* Video Container */}
              <div className="relative w-[300px] h-[300px] md:w-[600px] md:h-[600px] z-20 flex items-center justify-center">
                 <ScrollImageSequence 
