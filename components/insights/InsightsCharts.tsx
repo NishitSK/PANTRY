@@ -144,7 +144,7 @@ export default function InsightsCharts({ categoryData, storageData, totalItems }
           </h3>
         </div>
         <div className="p-4 flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4">
-            <div className="h-full max-h-[250px] aspect-square relative">
+            <div className="h-full min-h-[250px] max-h-[250px] aspect-square relative">
                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

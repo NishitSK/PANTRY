@@ -296,7 +296,7 @@ export default function AddItemPage() {
     <DashboardLayout>
       <div className="max-w-6xl mx-auto pb-12">
         <div className="mb-12 mt-4 space-y-3">
-          <SectionHeading className="font-serif text-5xl md:text-6xl tracking-tight text-foreground">Add New Item</SectionHeading>
+          <SectionHeading className="font-serif text-3xl md:text-5xl lg:text-6xl tracking-tight text-foreground">Add New Item</SectionHeading>
           <p className="text-xl text-muted-foreground font-light">Add groceries to your inventory with smart expiry predictions</p>
         </div>
 

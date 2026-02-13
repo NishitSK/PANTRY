@@ -242,7 +242,7 @@ export default function InventoryPage() {
                               handleDelete(item._id);
                           }}
                           disabled={deletingId === item._id}
-                          className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
                           title="Delete Item"
                         >
                           {deletingId === item._id ? (
