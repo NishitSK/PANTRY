@@ -86,7 +86,7 @@ export default function LandingPage() {
                     filePrefix="ezgif-frame-"
                     fileSuffix=".jpg"
                     frameCount={80} 
-                    className="w-full h-full drop-shadow-2xl rounded-full overflow-hidden" 
+                    className="w-full h-full drop-shadow-2xl" 
                     scale={1.5}
                     objectFit="cover"
                     scrollProgress={scrollYProgress}
@@ -98,7 +98,7 @@ export default function LandingPage() {
       </section>
 
        {/* Features Preview */}
-       <section className="min-h-screen bg-secondary/30 py-32 px-6 rounded-t-[3rem] mt-20 relative z-30 border-t border-border/50">
+       <section className="min-h-screen bg-secondary/30 py-32 px-6 rounded-t-[3rem] mt-48 lg:mt-20 relative z-30 border-t border-border/50">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-20 space-y-4">
                     <h2 className="font-serif text-4xl md:text-5xl text-foreground">manage your kitchen <br/> like a pro</h2>
