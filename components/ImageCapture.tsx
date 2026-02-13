@@ -45,9 +45,68 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     }
   }
 
-  const performOcr = async (imageFile: File): Promise<string> => {
+  const preprocessImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        // 1. Resize (Max 1500px)
+        const MAX_DIMENSION = 1500
+        let width = img.width
+        let height = img.height
+        
+        if (width > height) {
+          if (width > MAX_DIMENSION) {
+            height *= MAX_DIMENSION / width
+            width = MAX_DIMENSION
+          }
+        } else {
+          if (height > MAX_DIMENSION) {
+            width *= MAX_DIMENSION / height
+            height = MAX_DIMENSION
+          }
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        if (!ctx) {
+          resolve(URL.createObjectURL(file))
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        // 2. Grayscale & Contrast
+        const imageData = ctx.getImageData(0, 0, width, height)
+        const data = imageData.data
+        const contrast = 50 // Contrast factor (0-100+)
+        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast))
+
+        for (let i = 0; i < data.length; i += 4) {
+          // Grayscale
+          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+          
+          // Contrast
+          const c = factor * (avg - 128) + 128
+          
+          data[i] = c     // R
+          data[i + 1] = c // G
+          data[i + 2] = c // B
+        }
+        
+        ctx.putImageData(imageData, 0, 0)
+        resolve(canvas.toDataURL('image/jpeg', 0.9))
+      }
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  const performOcr = async (imageInput: File | string): Promise<string> => {
     const worker = await createWorker('eng');
-    const ret = await worker.recognize(imageFile);
+    const ret = await worker.recognize(imageInput);
     await worker.terminate();
     return ret.data.text;
   }
@@ -59,11 +118,16 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     
     try {
       const formData = new FormData()
-      formData.append('image', capturedFile)
+      formData.append('image', capturedFile) // Send original image to backend for storage/display if needed
 
       // Always perform OCR since "Vision Mode" is deprecated
       try {
-        const text = await performOcr(capturedFile);
+        // Preprocess image for better OCR
+        console.log("Preprocessing image...")
+        const preprocessedImage = await preprocessImage(capturedFile)
+        
+        console.log("Starting OCR...")
+        const text = await performOcr(preprocessedImage);
         console.log("Extracted Text:", text);
         formData.append('extractedText', text);
       } catch (ocrError) {
