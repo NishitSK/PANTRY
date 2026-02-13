@@ -50,23 +50,15 @@ export default {
 					DEFAULT: "hsl(var(--card))",
 					foreground: "hsl(var(--card-foreground))",
 				},
-				brand: {
-					50: '#eff6ff',
-					100: '#dbeafe',
-					200: '#bfdbfe',
-					300: '#93c5fd',
-					400: '#60a5fa',
-					500: '#3b82f6',
-					600: '#2563eb',
-					700: '#1d4ed8',
-					800: '#1e40af',
-					900: '#1e3a8a'
-				}
 			},
 			borderRadius: {
 				lg: "var(--radius)",
 				md: "calc(var(--radius) - 2px)",
 				sm: "calc(var(--radius) - 4px)",
+			},
+			fontFamily: {
+				sans: ["var(--font-outfit)", "sans-serif"],
+				serif: ["var(--font-fraunces)", "serif"],
 			},
 			keyframes: {
 				"accordion-down": {
@@ -77,10 +69,15 @@ export default {
 					from: { height: "var(--radix-accordion-content-height)" },
 					to: { height: "0" },
 				},
+				"spin-slow": {
+					from: { transform: "rotate(0deg)" },
+					to: { transform: "rotate(360deg)" },
+				}
 			},
 			animation: {
 				"accordion-down": "accordion-down 0.2s ease-out",
 				"accordion-up": "accordion-up 0.2s ease-out",
+				"spin-slow": "spin-slow 20s linear infinite",
 			},
 		}
 	},

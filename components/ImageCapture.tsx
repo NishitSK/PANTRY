@@ -2,8 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/shadcn-button'
-import { Camera, Image as ImageIcon, X, Sparkles } from 'lucide-react'
-import Image from 'next/image'
+import { Camera, Image as ImageIcon, X, ScanLine, FileText } from 'lucide-react'
+import { createWorker } from 'tesseract.js'
 
 interface ImageCaptureProps {
   onImageCaptured?: (file: File) => void
@@ -13,6 +13,7 @@ interface ImageCaptureProps {
 export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: ImageCaptureProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
+  // OCR Mode is now implicit/always on for the receipt scanner
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -44,6 +45,13 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     }
   }
 
+  const performOcr = async (imageFile: File): Promise<string> => {
+    const worker = await createWorker('eng');
+    const ret = await worker.recognize(imageFile);
+    await worker.terminate();
+    return ret.data.text;
+  }
+
   const handleAnalyze = async () => {
     if (!capturedFile) return
     
@@ -52,6 +60,18 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     try {
       const formData = new FormData()
       formData.append('image', capturedFile)
+
+      // Always perform OCR since "Vision Mode" is deprecated
+      try {
+        const text = await performOcr(capturedFile);
+        console.log("Extracted Text:", text);
+        formData.append('extractedText', text);
+      } catch (ocrError) {
+        console.error("OCR Failed:", ocrError);
+        alert("Could not read text from image. Please try a clearer photo.");
+        setAnalyzing(false);
+        return; 
+      }
 
       const res = await fetch('/api/analyze-image', {
         method: 'POST',
@@ -83,11 +103,11 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     <div className="w-full bg-card text-card-foreground rounded-xl border border-border overflow-hidden shadow-sm transition-all">
       <div className="p-3 border-b border-border flex items-center justify-between">
         <h3 className="font-semibold flex items-center gap-2 text-foreground text-sm">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          AI Smart Scan
+          <ScanLine className="h-4 w-4 text-primary" />
+          Receipt Scanner
         </h3>
-        <span className="text-[10px] font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded-full">
-          Beta
+        <span className="text-[10px] font-medium px-2 py-0.5 bg-muted text-muted-foreground rounded-full border border-border">
+          Text Recognition
         </span>
       </div>
 
@@ -105,14 +125,13 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
                 Take photo / Upload
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Scan receipt or item
+                Scan a receipt or grocery list
               </p>
             </div>
           </div>
         ) : (
           <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5">
             <div className="aspect-video relative w-full">
-               {/* Using regular img for preview to avoid dealing with next/image complexity for blobs */}
                <img 
                  src={preview} 
                  alt="Preview" 
@@ -144,11 +163,11 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
                 disabled={analyzing}
               >
                 {analyzing ? (
-                  <>Processing...</>
+                  <>Reading Text...</>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
-                    Analyze with AI
+                    <FileText className="h-4 w-4" />
+                    Extract Items
                   </>
                 )}
               </Button>

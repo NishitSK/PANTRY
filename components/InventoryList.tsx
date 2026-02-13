@@ -122,7 +122,7 @@ export default function InventoryList({ initialItems }: { initialItems: Inventor
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((item) => {
         const latestPrediction = item.predictions[0]
         const daysUntilExpiry = latestPrediction
@@ -140,151 +140,127 @@ export default function InventoryList({ initialItems }: { initialItems: Inventor
 
         const isEditing = editingId === item.id
 
-        const urgencyColor = 
-          daysUntilExpiry === null ? 'bg-green-500' :
-          daysUntilExpiry < 0 ? 'bg-red-500' :
-          daysUntilExpiry <= 2 ? 'bg-orange-500' :
-          'bg-green-500'
-
         return (
           <div 
             key={item.id} 
-            className={`group relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all duration-200 overflow-hidden`}
+            className="group relative bg-card text-card-foreground rounded-xl border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 flex flex-col overflow-hidden"
           >
-            {/* Colored Status Bar */}
-            <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${urgencyColor}`} />
-
-            <div className="p-5 pl-7">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {item.product.name}
-                  </h3>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 mt-1">
-                    {item.product.category}
-                  </span>
-                </div>
-                {latestPrediction && <UrgencyBadge level={urgencyLevel} />}
+            {/* Context Header */}
+            <div className="p-4 flex items-start justify-between border-b border-border/50 bg-muted/20">
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{item.product.category}</span>
+                <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1" title={item.product.name}>
+                  {item.product.name}
+                </h3>
               </div>
+              {latestPrediction && <UrgencyBadge level={urgencyLevel} />}
+            </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                {/* Quantity */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 dark:bg-gray-800/50">
-                  <div className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-blue-600 dark:text-blue-400">
-                    <Scale className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Quantity</p>
-                    {isEditing ? (
-                        <div className="flex items-center gap-1 mt-1">
-                            <input 
-                                type="number" 
-                                value={editForm.quantity}
-                                onChange={e => setEditForm({...editForm, quantity: e.target.value})}
-                                className="w-20 px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-brand-500 outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                step="0.1"
-                            />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.unit}</span>
-                        </div>
-                    ) : (
-                        <p className="font-bold text-gray-900 dark:text-gray-100">{item.quantity} {item.unit}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Storage */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 dark:bg-gray-800/50">
-                  <div className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm text-purple-600 dark:text-purple-400">
-                    {item.storageMethod.name.toLowerCase().includes('freez') ? <Snowflake className="w-4 h-4" /> : 
-                     item.storageMethod.name.toLowerCase().includes('frig') ? <Thermometer className="w-4 h-4" /> : 
-                     <Archive className="w-4 h-4" />}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Storage</p>
-                    <p className="font-bold text-gray-900 dark:text-gray-100">{item.storageMethod.name}</p>
-                  </div>
-                </div>
-
-                {/* Expiry */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50/80 dark:bg-gray-800/50">
-                  <div className={`p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm ${
-                      daysUntilExpiry! < 0 ? 'text-red-600 dark:text-red-400' : 
-                      daysUntilExpiry === 0 ? 'text-orange-600 dark:text-orange-400' : 
-                      'text-green-600 dark:text-green-400'
-                  }`}>
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Expires</p>
-                    {latestPrediction ? (
-                      <>
-                        <p className="font-bold text-gray-900 dark:text-gray-100">
-                          {formatIndianDate(new Date(latestPrediction.predictedExpiry))}
-                        </p>
-                        <p className={`text-xs font-bold ${
-                          daysUntilExpiry! < 0 ? 'text-red-600 dark:text-red-400' : 
-                          daysUntilExpiry === 0 ? 'text-orange-600 dark:text-orange-400' : 
-                          'text-green-600 dark:text-green-400'
-                        }`}>
-                          {daysUntilExpiry! < 0 ? 'Expired' : 
-                           daysUntilExpiry === 0 ? 'Expires Today (2-4h left)' : 
-                           `${daysUntilExpiry} days left`}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-gray-400 dark:text-gray-500">-</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes & Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between pt-2">
-                <div className="w-full sm:w-auto flex-1">
-                    {(item.notes || isEditing) && (
-                    <div className="bg-yellow-50/50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
-                        <p className="text-xs text-yellow-700 dark:text-yellow-500 font-bold mb-1 flex items-center gap-1">
-                            <Edit2 className="w-3 h-3" /> Notes
-                        </p>
+            {/* Main Content */}
+            <div className="p-4 flex-1 space-y-4">
+              
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="p-2.5 rounded-lg bg-secondary/30 flex items-center gap-2.5">
+                    <Scale className="w-4 h-4 text-secondary-foreground/70" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground font-semibold uppercase">Qty</span>
                         {isEditing ? (
-                            <textarea
-                                value={editForm.notes}
-                                onChange={e => setEditForm({...editForm, notes: e.target.value})}
-                                className="w-full px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700"
-                                rows={2}
-                                placeholder="Add notes..."
-                            />
+                             <div className="flex items-center gap-1">
+                                <input 
+                                    type="number" 
+                                    value={editForm.quantity}
+                                    onChange={e => setEditForm({...editForm, quantity: e.target.value})}
+                                    className="w-14 px-1 py-0.5 text-xs border rounded bg-background"
+                                />
+                                <span className="text-xs font-medium">{item.unit}</span>
+                             </div>
                         ) : (
-                            <p className="text-sm text-gray-700 dark:text-gray-300 italic">{item.notes}</p>
+                            <span className="text-sm font-bold">{item.quantity} {item.unit}</span>
                         )}
                     </div>
-                    )}
-                </div>
+                 </div>
 
-                <div className="flex gap-2 w-full sm:w-auto justify-stretch sm:justify-end">
-                    {isEditing ? (
-                        <>
-                            <Button onClick={() => saveEdit(item.id)} size="sm" className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white gap-2">
-                                <Save className="w-4 h-4" /> Save
-                            </Button>
-                            <Button onClick={cancelEdit} size="sm" variant="ghost" className="flex-1 sm:flex-none gap-2">
-                                <X className="w-4 h-4" /> Cancel
-                            </Button>
-                        </>
+                 <div className="p-2.5 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 flex items-center gap-2.5">
+                    <div className="text-blue-500">
+                        {item.storageMethod.name.toLowerCase().includes('freez') ? <Snowflake className="w-4 h-4" /> : 
+                         item.storageMethod.name.toLowerCase().includes('frig') ? <Thermometer className="w-4 h-4" /> : 
+                         <Archive className="w-4 h-4" />}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground font-semibold uppercase">Storage</span>
+                        <span className="text-sm font-bold truncate max-w-[8ch]">{item.storageMethod.name}</span>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Expiry Date Big Display */}
+              <div className={`p-3 rounded-lg border flex items-center justify-between ${
+                  daysUntilExpiry! < 0 ? 'bg-red-50/50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' :
+                  daysUntilExpiry === 0 ? 'bg-orange-50/50 border-orange-100 dark:bg-orange-900/10 dark:border-orange-900/30' :
+                  'bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-900/30'
+              }`}>
+                  <div className="flex items-center gap-2">
+                    <Calendar className={`w-4 h-4 ${
+                         daysUntilExpiry! < 0 ? 'text-red-500' :
+                         daysUntilExpiry === 0 ? 'text-orange-500' :
+                         'text-green-500'
+                    }`} />
+                    <span className="text-xs font-semibold text-muted-foreground">Expires</span>
+                  </div>
+                  <span className={`text-sm font-bold tabular-nums ${
+                       daysUntilExpiry! < 0 ? 'text-red-600' :
+                       daysUntilExpiry === 0 ? 'text-orange-600' :
+                       'text-green-600'
+                  }`}>
+                    {latestPrediction ? formatIndianDate(new Date(latestPrediction.predictedExpiry)) : 'N/A'}
+                  </span>
+              </div>
+
+              {/* Notes Area */}
+               {(item.notes || isEditing) && (
+                <div className="pt-2 border-t border-border/50">
+                     {isEditing ? (
+                        <textarea
+                            value={editForm.notes}
+                            onChange={e => setEditForm({...editForm, notes: e.target.value})}
+                            className="w-full px-2 py-1 text-xs border rounded bg-background transition-colors focus:ring-1 focus:ring-primary outline-none"
+                            rows={2}
+                            placeholder="Add notes..."
+                        />
                     ) : (
-                        <>
-                            <Button onClick={() => startEdit(item)} size="sm" variant="outline" className="flex-1 sm:flex-none gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
-                                <Edit2 className="w-4 h-4" /> Edit
-                            </Button>
-                            <Button onClick={() => handleDelete(item.id)} size="sm" variant="destructive" className="flex-1 sm:flex-none gap-2">
-                                <Trash2 className="w-4 h-4" /> Delete
-                            </Button>
-                        </>
+                        item.notes && (
+                            <div className="flex gap-1.5 text-xs text-muted-foreground bg-muted/30 p-2 rounded-md">
+                                <Edit2 className="w-3 h-3 mt-0.5 shrink-0 opacity-50" />
+                                <span className="italic line-clamp-2">{item.notes}</span>
+                            </div>
+                        )
                     )}
                 </div>
-              </div>
+               )}
+            </div>
+
+            {/* Actions Footer - Only visible on hover or edit */}
+            <div className={`p-3 bg-muted/20 border-t border-border/50 flex gap-2 transition-opacity duration-200 ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                {isEditing ? (
+                    <>
+                        <Button onClick={() => saveEdit(item.id)} size="sm" className="flex-1 h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+                            Save
+                        </Button>
+                        <Button onClick={cancelEdit} size="sm" variant="ghost" className="flex-1 h-8 text-xs">
+                            Cancel
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <Button onClick={() => startEdit(item)} size="sm" variant="outline" className="flex-1 h-8 text-xs border-dashed hover:border-solid hover:bg-secondary">
+                            Edit
+                        </Button>
+                        <Button onClick={() => handleDelete(item.id)} size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                    </>
+                )}
             </div>
           </div>
         )

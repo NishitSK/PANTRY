@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine 
@@ -193,7 +193,7 @@ export default function AddItemPage() {
     }
   }
 
-  const calculatePrediction = () => {
+  const calculatePrediction = useCallback(() => {
     const product = products.find(p => p.id === selectedProductId)
     const storage = storageMethods.find(s => s.id === selectedStorageId)
 
@@ -221,7 +221,13 @@ export default function AddItemPage() {
     const expiry = new Date(purchased)
     expiry.setDate(expiry.getDate() + effectiveDays)
     setPredictedExpiry(expiry)
-  }
+  }, [products, storageMethods, selectedProductId, selectedStorageId, purchasedAt, openedAt])
+
+  useEffect(() => {
+    if (selectedProductId && selectedStorageId && purchasedAt) {
+      calculatePrediction()
+    }
+  }, [selectedProductId, selectedStorageId, purchasedAt, openedAt, calculatePrediction])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -289,9 +295,9 @@ export default function AddItemPage() {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto pb-12">
-        <div className="mb-8">
-          <SectionHeading>Add New Item</SectionHeading>
-          <p className="text-muted-foreground mt-2">Add groceries to your inventory with smart expiry predictions</p>
+        <div className="mb-12 mt-4 space-y-3">
+          <SectionHeading className="font-serif text-5xl md:text-6xl tracking-tight text-foreground">Add New Item</SectionHeading>
+          <p className="text-xl text-muted-foreground font-light">Add groceries to your inventory with smart expiry predictions</p>
         </div>
 
         {error && (
@@ -307,53 +313,52 @@ export default function AddItemPage() {
             <Card className="h-full">
               <form id="add-item-form" onSubmit={handleSubmit} className="space-y-5">
                 {/* AI Scanner Section (Always Visible) */}
-                <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
-                  <div className="animate-in slide-in-from-top-2 duration-200 fade-in">
-                    <ImageCapture onAnalysisComplete={handleAnalysisComplete} />
-                    
-                    {/* Detected Items Inline */}
-                    {showDetectedItems && detectedItems.length > 0 && (
-                      <div className="mt-3 p-3 bg-background border border-border rounded-xl shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-semibold text-primary text-xs flex items-center gap-2">
-                            <span>✨</span> Detected Items
-                          </h3>
-                          <button 
-                            type="button"
-                            onClick={() => setShowDetectedItems(false)}
-                            className="text-muted-foreground hover:text-foreground text-[10px]"
-                          >
-                            Dismiss
-                          </button>
-                        </div>
-                        <div className="grid gap-2 grid-cols-1">
-                          {detectedItems.map((item, index) => (
-                            <div 
-                              key={index}
-                              className="p-3 bg-muted/30 rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer group"
-                              onClick={() => applyDetectedItem(item)}
-                            >
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground mt-0.5">
-                                    {item.quantity} {item.unit} • {item.category}
-                                  </p>
-                                </div>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                                  item.matchedProductId 
-                                    ? 'bg-primary/5 text-primary border-primary/20' 
-                                    : 'bg-secondary/5 text-secondary border-secondary/20'
-                                }`}>
-                                  {item.matchedProductId ? 'Match' : 'New'}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {/* Receipt Scanner Section */}
+                <div className="mb-2">
+                   <ImageCapture onAnalysisComplete={handleAnalysisComplete} />
+                   
+                   {/* Detected Items Inline */}
+                   {showDetectedItems && detectedItems.length > 0 && (
+                     <div className="mt-3 p-3 bg-background border border-border rounded-xl shadow-sm">
+                       <div className="flex items-center justify-between mb-3">
+                         <h3 className="font-semibold text-primary text-xs flex items-center gap-2">
+                           <span>✨</span> Detected Items
+                         </h3>
+                         <button 
+                           type="button"
+                           onClick={() => setShowDetectedItems(false)}
+                           className="text-muted-foreground hover:text-foreground text-[10px]"
+                         >
+                           Dismiss
+                         </button>
+                       </div>
+                       <div className="grid gap-2 grid-cols-1">
+                         {detectedItems.map((item, index) => (
+                           <div 
+                             key={index}
+                             className="p-3 bg-muted/30 rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer group"
+                             onClick={() => applyDetectedItem(item)}
+                           >
+                             <div className="flex items-start justify-between">
+                               <div>
+                                 <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">{item.name}</p>
+                                 <p className="text-xs text-muted-foreground mt-0.5">
+                                   {item.quantity} {item.unit} • {item.category}
+                                 </p>
+                               </div>
+                               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                                 item.matchedProductId 
+                                   ? 'bg-primary/5 text-primary border-primary/20' 
+                                   : 'bg-secondary/5 text-secondary border-secondary/20'
+                               }`}>
+                                 {item.matchedProductId ? 'Match' : 'New'}
+                               </span>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -442,8 +447,8 @@ export default function AddItemPage() {
                         Quantity
                       </label>
                       <div className="relative h-10">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                          <Scale className="w-4 h-4" />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                          <Scale className="w-5 h-5" />
                         </div>
                         <input
                           type="number"
@@ -452,7 +457,7 @@ export default function AddItemPage() {
                           value={quantity}
                           onChange={(e) => setQuantity(e.target.value)}
                           required
-                          className="w-full h-full pl-10 pr-3 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 hover:bg-muted/50 transition-colors text-foreground placeholder:text-muted-foreground text-sm"
+                          className="w-full h-full pl-12 pr-4 border border-border/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/20 hover:bg-muted/40 transition-all duration-200 text-foreground placeholder:text-muted-foreground text-base"
                         />
                       </div>
                     </div>
@@ -488,8 +493,8 @@ export default function AddItemPage() {
                       Purchase Date
                     </label>
                     <div className="relative h-10">
-                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                        <CalendarIcon className="w-4 h-4" />
+                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                        <CalendarIcon className="w-5 h-5" />
                       </div>
                       <input
                         type="date"
@@ -497,7 +502,7 @@ export default function AddItemPage() {
                         onChange={(e) => setPurchasedAt(e.target.value)}
                         required
                         max={new Date().toISOString().split('T')[0]}
-                        className="w-full h-full pl-10 pr-3 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 hover:bg-muted/50 transition-colors text-foreground placeholder:text-muted-foreground text-sm"
+                        className="w-full h-full pl-12 pr-4 border border-border/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/20 hover:bg-muted/40 transition-all duration-200 text-foreground placeholder:text-muted-foreground text-base"
                       />
                     </div>
                   </div>
@@ -507,15 +512,15 @@ export default function AddItemPage() {
                       Opened Date <span className="text-muted-foreground/60">(Opt)</span>
                     </label>
                     <div className="relative h-10">
-                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                        <CalendarIcon className="w-4 h-4" />
+                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                        <CalendarIcon className="w-5 h-5" />
                       </div>
                       <input
                         type="date"
                         value={openedAt}
                         onChange={(e) => setOpenedAt(e.target.value)}
                         max={new Date().toISOString().split('T')[0]}
-                        className="w-full h-full pl-10 pr-3 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 hover:bg-muted/50 transition-colors text-foreground placeholder:text-muted-foreground text-sm"
+                        className="w-full h-full pl-12 pr-4 border border-border/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/20 hover:bg-muted/40 transition-all duration-200 text-foreground placeholder:text-muted-foreground text-base"
                       />
                     </div>
                   </div>
@@ -526,15 +531,15 @@ export default function AddItemPage() {
                     Notes <span className="text-muted-foreground/60">(Opt)</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-3 text-muted-foreground pointer-events-none">
-                      <FileText className="w-4 h-4" />
+                    <div className="absolute left-4 top-4 text-muted-foreground pointer-events-none">
+                      <FileText className="w-5 h-5" />
                     </div>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      rows={2}
+                      rows={3}
                       placeholder="Add notes..."
-                      className="w-full pl-10 pr-4 py-2 border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/30 hover:bg-muted/50 transition-colors text-foreground placeholder:text-muted-foreground resize-none text-sm"
+                      className="w-full pl-12 pr-4 py-3 border border-border/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-muted/20 hover:bg-muted/40 transition-all duration-200 text-foreground placeholder:text-muted-foreground resize-none text-base"
                     />
                   </div>
                 </div>
@@ -550,19 +555,19 @@ export default function AddItemPage() {
 
 
             <Card className="shadow-sm border border-border">
-              <h3 className="font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" /> Prediction Preview
+              <h3 className="font-serif text-xl mb-6 text-foreground flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" /> Prediction Preview
               </h3>
               
               {predictedExpiry ? (
                 <div className="space-y-6">
-                  <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-primary/20"></div>
-                    <p className="text-sm text-primary/80 mb-1 font-medium uppercase tracking-wider">Predicted Expiry</p>
-                    <p className="text-4xl font-bold text-primary my-2">
+                  <div className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-[2rem] border border-green-100 dark:border-green-800/30 text-center relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-500"></div>
+                    <p className="text-xs text-green-700/80 dark:text-green-300 mb-2 font-bold uppercase tracking-widest">Estimated Expiry</p>
+                    <p className="font-serif text-5xl font-medium text-green-800 dark:text-green-100 my-4 tracking-tight">
                       {formatIndianDate(predictedExpiry)}
                     </p>
-                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mt-1">
+                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/60 dark:bg-black/20 backdrop-blur-sm border border-green-200/50 dark:border-green-800/30 text-green-700 dark:text-green-300 text-sm font-medium mt-2 shadow-sm">
                       {(() => {
                         const diffTime = predictedExpiry.getTime() - new Date().getTime();
                         const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -654,14 +659,14 @@ export default function AddItemPage() {
                 type="submit" 
                 form="add-item-form"
                 disabled={submitting} 
-                className="w-full h-10 text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-300 rounded-xl"
+                className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 rounded-full"
               >
                 {submitting ? 'Adding Item...' : 'Add to Pantry'}
               </Button>
               <Button
                 type="button"
                 onClick={() => router.push('/inventory')}
-                className="w-full h-10 bg-muted hover:bg-muted/80 text-foreground rounded-xl"
+                className="w-full h-12 bg-white hover:bg-gray-50 text-foreground border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 rounded-full"
               >
                 Cancel
               </Button>

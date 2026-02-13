@@ -156,80 +156,82 @@ export default function InsightsLocationWeather() {
   }
 
   return (
-    <Card>
-      <div className="flex flex-col md:flex-row md:items-end gap-4">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Insights Location</label>
-          <div className="relative">
+    <Card className="!rounded-[2rem] border-border/50 shadow-sm h-full flex flex-col justify-center p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="relative group flex-1">
             <input
               type="text"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g., Mumbai, Delhi"
-              className="w-full pl-3 pr-10 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background text-foreground"
+              placeholder="Location..."
+              className="w-full pl-3 pr-8 py-2 text-sm border border-border/50 rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-muted/30 text-foreground"
             />
             <button
               onClick={handleDetect}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Detect Location"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+              title="Detect"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-3 h-3" />
             </button>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Used for weather-based analytics and shown in the navbar.</p>
         </div>
-
-        <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saving} className="bg-green-700 hover:bg-green-800 text-white">
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
+        <Button onClick={handleSave} disabled={saving} size="sm" className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-sm">
+            {saving ? '...' : 'Save'}
+        </Button>
       </div>
 
       {msg && (
-        <div className="mt-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300 text-sm">{msg}</div>
+        <div className="mb-2 text-[10px] text-blue-600 dark:text-blue-400 truncate px-1">
+          {msg}
+        </div>
       )}
 
       {weather ? (
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-muted/50 rounded-xl border border-border flex flex-col items-center justify-center">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              <Thermometer className="w-3 h-3" /> Temperature
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 hover:shadow-md transition-all group">
+            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-full group-hover:scale-110 transition-transform">
+              <Thermometer className="w-3 h-3 text-orange-600 dark:text-orange-400" />
             </div>
-            <div className="text-2xl font-bold text-foreground">
-              {fetchingWeather ? '...' : `${Math.round(weather.tempC)}°C`}
-            </div>
-          </div>
-          
-          <div className="p-4 bg-muted/50 rounded-xl border border-border flex flex-col items-center justify-center">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              <Droplets className="w-3 h-3" /> Humidity
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {fetchingWeather ? '...' : `${Math.round(weather.humidity)}%`}
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">Temp</div>
+              <div className="text-lg font-serif font-medium text-foreground">
+                {fetchingWeather ? '..' : `${Math.round(weather.tempC)}°`}
+              </div>
             </div>
           </div>
           
-          <div className="p-4 bg-muted/50 rounded-xl border border-border flex flex-col items-center justify-center">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> Location
+          <div className="p-3 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 hover:shadow-md transition-all group">
+            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
+              <Droplets className="w-3 h-3 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="text-sm font-bold text-foreground truncate w-full text-center" title={weather?.locationName || city || '-'}>
-              {weather?.locationName || city || '-'}
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">Humidity</div>
+              <div className="text-lg font-serif font-medium text-foreground">
+                {fetchingWeather ? '..' : `${Math.round(weather.humidity)}%`}
+              </div>
             </div>
           </div>
           
-          <div className="p-4 bg-muted/50 rounded-xl border border-border flex flex-col items-center justify-center">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              <Clock className="w-3 h-3" /> Updated
+          <div className="p-2 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 group">
+             <div className="flex items-center gap-1 mb-0.5">
+                <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">Loc</span>
             </div>
-            <div className="text-sm font-bold text-foreground">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            <div className="text-xs font-bold text-foreground truncate w-full text-center px-1" title={weather?.locationName || city || '-'}>
+                {weather?.locationName || city || '-'}
+            </div>
+          </div>
+
+          <div className="p-2 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 group">
+             <div className="flex items-center gap-1 mb-0.5">
+                <Clock className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+                <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">Time</span>
+            </div>
+             <div className="text-xs font-bold text-foreground">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         </div>
       ) : (
-        <div className="mt-5 p-8 border-2 border-dashed border-gray-200 rounded-xl text-center flex flex-col items-center justify-center text-gray-400">
-          <MapPin className="w-8 h-8 mb-2 opacity-30" />
-          <p className="text-sm">Set a valid location to see weather insights.</p>
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-muted/5 rounded-2xl border border-dashed border-border/50 p-2">
+          <p className="text-xs">Set location</p>
         </div>
       )}
     </Card>

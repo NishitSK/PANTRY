@@ -2,8 +2,9 @@ import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IUser extends Document {
     email: string
-    passwordHash: string
+    passwordHash?: string
     name?: string
+    image?: string
     city: string
     createdAt: Date
     updatedAt: Date
@@ -20,11 +21,14 @@ const UserSchema = new Schema<IUser>(
         },
         passwordHash: {
             type: String,
-            required: true,
+            required: false,
         },
         name: {
             type: String,
             trim: true,
+        },
+        image: {
+            type: String,
         },
         city: {
             type: String,

@@ -10,7 +10,7 @@ import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const links = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/inventory', label: 'Inventory' },
   { href: '/add', label: 'Add Item' },
   { href: '/insights', label: 'Insights' },
@@ -28,7 +28,7 @@ export default function Header() {
         <div className="h-14 flex items-center justify-between gap-2">
           {/* Left: Brand */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="inline-flex items-center gap-2">
+            <Link href="/dashboard" className="inline-flex items-center gap-2">
               <span className="inline-block h-2 w-2 rounded-full bg-brand-600"/>
               <span className="text-lg font-semibold tracking-tight text-gray-900 dark:text-slate-100">
                 <span className="text-brand-700 dark:text-brand-300">Pantry</span> Guardian
@@ -76,7 +76,7 @@ export default function Header() {
             ) : (
               <div className="flex gap-2">
                  <Link href="/auth/login"><Button variant="ghost" size="sm">Login</Button></Link>
-                 <Link href="/auth/register"><Button size="sm">Get Started</Button></Link>
+                 <Link href="/auth/login"><Button size="sm">Get Started</Button></Link>
               </div>
             )}
           </div>

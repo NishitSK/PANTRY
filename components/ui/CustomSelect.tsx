@@ -55,8 +55,8 @@ export default function CustomSelect({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          w-full h-full flex items-center justify-between px-4 py-2 text-left
-          border rounded-xl transition-all duration-200
+          w-full h-full flex items-center justify-between px-5 py-3 text-left
+          border rounded-2xl transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-primary/20
           ${disabled 
             ? 'bg-muted/50 text-muted-foreground cursor-not-allowed border-transparent' 
@@ -79,7 +79,7 @@ export default function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-card border border-border/50 rounded-xl shadow-xl max-h-60 overflow-auto py-2 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 w-full mt-2 bg-card border border-border/50 rounded-2xl shadow-xl shadow-black/10 max-h-60 overflow-auto py-2 animate-in fade-in zoom-in-95 duration-100">
           {options.length === 0 ? (
             <div className="px-4 py-3 text-sm text-muted-foreground text-center">
               No options available

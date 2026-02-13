@@ -4,74 +4,74 @@
 
 @layer base {
   :root {
-    --background: 120 12% 96%;
-    /* #F4F6F3 Sage Gray */
-    --foreground: 220 23% 23%;
-    /* #2D3648 Dark Slate */
+    --background: 40 33% 98%;
+    /* Cream White */
+    --foreground: 140 30% 15%;
+    /* Deep Forest Green */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 23% 23%;
+    --card-foreground: 140 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 23% 23%;
+    --popover-foreground: 140 30% 15%;
 
-    --primary: 125 17% 37%;
-    /* #4F6F52 Olive Green */
-    --primary-foreground: 0 0% 100%;
+    --primary: 140 30% 35%;
+    /* Muted Forest Green */
+    --primary-foreground: 40 33% 98%;
 
-    --secondary: 33 41% 49%;
-    /* #B07A4A Clay Brown */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 40 20% 94%;
+    /* Light Beige */
+    --secondary-foreground: 140 30% 15%;
 
-    --muted: 120 10% 90%;
-    --muted-foreground: 220 10% 40%;
+    --muted: 40 20% 94%;
+    --muted-foreground: 140 10% 45%;
 
-    --accent: 120 12% 92%;
-    --accent-foreground: 125 17% 37%;
+    --accent: 142 70% 45%;
+    /* Bright Fresh Green */
+    --accent-foreground: 40 33% 98%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 40 33% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 125 17% 37%;
+    --border: 40 15% 90%;
+    --input: 40 15% 90%;
+    --ring: 140 30% 35%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
+    /* More rounded, organic feel */
   }
 
   .dark {
-    --background: 120 10% 10%;
-    /* #171c17 Deep Organic Dark */
-    --foreground: 60 5% 90%;
-    /* #e6e6e3 Warm Off-White */
+    --background: 140 30% 10%;
+    /* Very Dark Green */
+    --foreground: 40 33% 98%;
 
-    --card: 120 8% 14%;
-    /* #212621 Lighter Organic Dark */
-    --card-foreground: 60 5% 90%;
+    --card: 140 25% 15%;
+    --card-foreground: 40 33% 98%;
 
-    --popover: 120 8% 14%;
-    --popover-foreground: 60 5% 90%;
+    --popover: 140 25% 15%;
+    --popover-foreground: 40 33% 98%;
 
-    --primary: 125 25% 60%;
-    /* #7ca67f Muted Light Olive */
-    --primary-foreground: 120 10% 10%;
+    --primary: 140 40% 50%;
+    /* Lighter Forest Green for dark mode */
+    --primary-foreground: 140 30% 10%;
 
-    --secondary: 33 30% 60%;
-    /* #c4a485 Muted Clay */
-    --secondary-foreground: 120 10% 10%;
+    --secondary: 140 20% 20%;
+    --secondary-foreground: 40 33% 98%;
 
-    --muted: 120 8% 20%;
-    --muted-foreground: 120 5% 65%;
+    --muted: 140 20% 20%;
+    --muted-foreground: 140 15% 65%;
 
-    --accent: 120 8% 20%;
-    --accent-foreground: 60 5% 90%;
+    --accent: 75 50% 60%;
+    /* Brighter Lime for dark mode */
+    --accent-foreground: 140 30% 10%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 5% 90%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 120 8% 20%;
-    --input: 120 8% 20%;
-    --ring: 125 25% 60%;
+    --border: 140 20% 20%;
+    --input: 140 20% 20%;
+    --ring: 140 40% 50%;
   }
 }
 
