@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import connectDB from '@/lib/mongodb'
 import { User, InventoryItem } from '@/models'
 
@@ -8,18 +7,39 @@ import { User, InventoryItem } from '@/models'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+async function getOrCreateDbUser() {
+  const { userId } = await auth()
+  if (!userId) return null
+
+  const clerkUser = await currentUser()
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress
+  if (!email) return null
+
+  let user = await User.findOne({ email })
+  if (!user) {
+    user = await User.create({
+      email,
+      name: clerkUser?.fullName || clerkUser?.firstName || undefined,
+      image: clerkUser?.imageUrl,
+    })
+  }
+
+  return user
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    await connectDB()
+
+    const user = await getOrCreateDbUser()
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    const userProfile = await User.findById(user._id).select('_id name email city createdAt').lean()
 
-    const user = await User.findOne({ email: session.user.email }).select('_id name email city createdAt').lean()
-
-    if (!user) {
+    if (!userProfile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
@@ -61,11 +81,11 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      city: user.city,
-      createdAt: user.createdAt,
+      id: userProfile._id.toString(),
+      name: userProfile.name,
+      email: userProfile.email,
+      city: userProfile.city,
+      createdAt: userProfile.createdAt,
       stats: {
         totalItems,
         totalValue
@@ -82,12 +102,13 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    await connectDB()
+
+    const user = await getOrCreateDbUser()
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    await connectDB()
 
     const { city } = await req.json()
 
@@ -99,7 +120,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updatedUser = await User.findOneAndUpdate(
-      { email: session.user.email },
+      { _id: user._id },
       { city },
       { new: true }
     ).select('_id name email city').lean()

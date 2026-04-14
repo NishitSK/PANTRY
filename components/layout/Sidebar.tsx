@@ -2,82 +2,104 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, PlusCircle, BarChart3, Settings, LogOut } from 'lucide-react'
+import { SignOutButton, useUser } from '@clerk/nextjs'
 import { cn } from '@/lib/utils'
 import WeatherChip from '@/components/ui/WeatherChip'
-import { useSession } from 'next-auth/react'
-import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Inventory', href: '/inventory', icon: Package },
-  { name: 'Add Item', href: '/add', icon: PlusCircle },
-  { name: 'Insights', href: '/insights', icon: BarChart3 },
+  { name: 'Website', href: '/', icon: 'home' },
+  { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+  { name: 'Inventory', href: '/inventory', icon: 'inventory_2' },
+  { name: 'Add Item', href: '/add', icon: 'add_circle' },
+  { name: 'Recipe Gallery', href: '/recipes', icon: 'menu_book' },
+  { name: 'Insights', href: '/insights', icon: 'analytics' },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user } = useUser()
 
   return (
-    <div className="hidden md:flex h-[calc(100vh-2rem)] my-4 ml-4 w-72 flex-col bg-card border border-border/50 shadow-xl shadow-black/5 rounded-[2rem] z-50 overflow-hidden transition-all duration-300">
+    <div className="hidden md:flex h-screen min-h-0 w-72 flex-col bg-[#F6F1E7] border-r-4 border-black z-50 overflow-hidden">
       {/* Brand Header */}
-      <div className="flex h-20 items-center gap-3 px-6">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Package className="h-6 w-6 text-primary" />
+      <div className="shrink-0 flex flex-col justify-center px-6 py-4 border-b-4 border-black bg-white">
+        <div className="flex items-center gap-3">
+          <img src="/icon.svg" alt="Pantry Guardian logo" className="h-8 w-8 border-2 border-black bg-white object-contain" />
+          <span className="ml-0.5 text-xl font-noto-serif font-bold text-black tracking-tight leading-none">Pantry Guardian</span>
         </div>
-        <div className="flex flex-col">
-            <span className="text-2xl font-serif font-bold text-foreground tracking-tight leading-none">Pantry</span>
-            <span className="text-sm font-medium text-primary tracking-widest uppercase opacity-80 leading-none">Guardian</span>
-        </div>
+        <p className="mt-1.5 ml-0.5 text-[9px] font-manrope font-black uppercase tracking-[0.24em] text-black">Brutalist inventory control</p>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1.5 px-4 py-8">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "group flex items-center gap-3.5 rounded-2xl px-5 py-3.5 text-sm font-medium transition-all duration-200 ease-in-out",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground")} />
-              {item.name}
-            </Link>
-          )
-        })}
-      </nav>
+      <div className="flex-1 min-h-0 flex flex-col">
+        {/* Navigation */}
+        <nav className="flex-1 min-h-0 space-y-2 px-3 py-6">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                prefetch
+                className={cn(
+                  'group flex items-center gap-3 px-3 py-2.5 text-xs font-black uppercase tracking-[0.12em] border-2 border-black transition-all duration-200',
+                  isActive
+                    ? 'bg-[#FFE66D] text-black shadow-[4px_4px_0_#000]'
+                    : 'bg-white text-black hover:bg-black hover:text-white'
+                )}
+              >
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-xl transition-all duration-300',
+                    isActive ? 'text-black scale-110' : 'text-black'
+                  )}
+                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
+                >
+                  {item.icon}
+                </span>
+                <span className="font-manrope tracking-tight">{item.name}</span>
+              </Link>
+            )
+          })}
+        </nav>
 
-      {/* Footer Actions */}
-      <div className="p-4 space-y-4 mb-4">
-        <div className="px-2">
-          <WeatherChip />
+        {/* User & Settings */}
+        <div className="shrink-0 p-4 space-y-3 border-t-4 border-black bg-[#F6F1E7]">
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <WeatherChip />
+          </div>
         </div>
+
+        <Link href="/settings" className={cn(
+          "flex items-center gap-4 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] border-2 border-black transition-all",
+          pathname === '/settings' ? 'bg-[#93E1A8] text-black shadow-[4px_4px_0_#000]' : 'bg-white text-black hover:bg-black hover:text-white'
+        )}>
+          <span className="material-symbols-outlined text-2xl">settings</span>
+          <span className="font-manrope">Settings</span>
+        </Link>
         
-        <div className="flex items-center justify-between px-2 py-2 rounded-2xl bg-muted/30 border border-border/50 mb-4">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider pl-3">Theme</span>
-          <ThemeToggle />
-        </div>
-
-        <Link href="/profile" className="flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50 group">
-          {session?.user?.image ? (
-             <img src={session.user.image} alt="Profile" className="h-10 w-10 rounded-full border-2 border-background shadow-sm" />
+        <div className="mt-1 px-3 py-3 bg-white border-2 border-black shadow-[4px_4px_0_#000]">
+          <div className="flex items-center gap-3">
+          {user?.imageUrl ? (
+             <img src={user.imageUrl} alt="Profile" className="h-10 w-10 border-2 border-black object-cover" />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shadow-sm">
-              {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+            <div className="h-10 w-10 bg-[#FFE66D] border-2 border-black flex items-center justify-center text-black font-bold font-noto-serif">
+              {user?.firstName?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{session?.user?.name || 'User Profile'}</span>
-            <span className="text-xs text-muted-foreground truncate">{session?.user?.email || 'Manage Account'}</span>
+            <span className="text-sm font-bold text-black truncate">{user?.fullName || 'Julian Vane'}</span>
+            <span className="text-[10px] text-black font-black uppercase tracking-widest truncate">Premium Curator</span>
           </div>
-        </Link>
+          </div>
+          <SignOutButton redirectUrl="/auth/login">
+            <button className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] border-2 border-black bg-[#FFE66D] text-black transition-all hover:bg-black hover:text-white">
+              <span className="material-symbols-outlined text-base">logout</span>
+              <span className="font-manrope">Logout</span>
+            </button>
+          </SignOutButton>
+        </div>
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
-import { useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import SectionHeading from '@/components/ui/SectionHeading'
@@ -10,17 +10,26 @@ import { getApiBaseUrl } from '@/lib/api'
 import { detectUserCity } from '@/lib/geolocation'
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession()
+  const router = useRouter()
+  const { user, isLoaded, isSignedIn } = useUser()
   const [city, setCity] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (session?.user?.email) {
+    if (!isLoaded) return
+
+    if (!isSignedIn) {
+      router.push('/auth/login')
+      setLoading(false)
+      return
+    }
+
+    if (isSignedIn) {
       fetchUserProfile()
     }
-  }, [session])
+  }, [isLoaded, isSignedIn, router])
 
   const fetchUserProfile = async () => {
     try {
@@ -84,7 +93,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (!isLoaded || loading) {
     return (
       <main className="container mx-auto px-4 py-8">
         <p>Loading...</p>
@@ -92,18 +101,18 @@ export default function SettingsPage() {
     )
   }
 
-  if (status === 'unauthenticated') {
-    redirect('/auth/login')
+  if (!isSignedIn) {
+    return null
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container mx-auto overflow-x-hidden px-2 sm:px-4 py-6 sm:py-8">
       <div className="mb-8">
         <SectionHeading>Settings</SectionHeading>
         <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your account and preferences</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <div className="lg:col-span-2 space-y-6">
         {message && (
           <div className={`p-4 rounded-lg ${message.includes('success') ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'}`}>
@@ -120,7 +129,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                value={session?.user?.name || ''}
+                value={user?.fullName || user?.firstName || ''}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
               />
@@ -132,7 +141,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="email"
-                value={session?.user?.email || ''}
+                value={user?.primaryEmailAddress?.emailAddress || ''}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
               />
@@ -142,15 +151,15 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Location (City)
               </label>
-              <div className="flex gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2">
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g., London, Mumbai, New York"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="flex-1 min-h-11 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
-                <Button onClick={handleUpdateCity} disabled={saving}>
+                <Button onClick={handleUpdateCity} disabled={saving} className="min-h-11 bg-[#FFE66D] text-black border-2 border-black hover:bg-black hover:text-white">
                   {saving ? 'Saving...' : 'Update'}
                 </Button>
               </div>
@@ -158,9 +167,10 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleDetectLocation}
-                  className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium flex items-center gap-1"
+                  className="inline-flex min-h-11 items-center gap-2 border-2 border-black bg-white px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white transition-colors"
                 >
-                  📍 Detect my location
+                  <span>📍</span>
+                  <span>Detect my location</span>
                 </button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

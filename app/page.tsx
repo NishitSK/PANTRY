@@ -1,5 +1,5 @@
-import LandingPage from '@/components/LandingPage'
+import LandingPageHighFidelity from '@/components/LandingPageHighFidelity'
 
 export default function Page() {
-  return <LandingPage />
+  return <LandingPageHighFidelity />
 }

@@ -28,9 +28,9 @@ const STORAGE_COLORS = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-xl">
-        <p className="font-serif font-medium text-lg mb-1">{label}</p>
-        <p className="text-sm font-medium text-primary">
+      <div className="bg-white p-3 border-2 border-black shadow-[4px_4px_0_#000]">
+        <p className="font-serif font-bold text-base mb-1 text-black">{label}</p>
+        <p className="text-xs font-black text-black uppercase tracking-[0.12em]">
           {payload[0].value} items
         </p>
       </div>
@@ -95,22 +95,22 @@ export default function InsightsCharts({ categoryData, storageData, totalItems }
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 flex-1 min-h-0 pb-6">
+    <div className="grid gap-6 md:grid-cols-2 flex-1 min-h-0 pb-6 items-stretch">
       {/* Top Categories Bar Chart */}
-      <Card className="overflow-hidden shadow-sm border border-border/50 flex flex-col !rounded-[2.5rem] h-full">
-        <div className="p-4 border-b border-border/40 shrink-0 bg-muted/5">
-          <h3 className="font-serif text-lg font-medium text-foreground flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Top Categories
+      <Card className="overflow-hidden !shadow-[6px_6px_0_#000] !border-4 !border-black flex flex-col !rounded-none min-h-[460px] !bg-white">
+        <div className="p-4 border-b-2 border-black shrink-0 bg-[#F6F1E7]">
+          <h3 className="font-serif text-lg font-bold text-black flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-black" /> Top Categories
           </h3>
         </div>
         <div className="p-4 flex-1 min-h-0">
           {barData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <p className="text-sm">No data available</p>
+            <div className="flex flex-col items-center justify-center h-full text-black/70">
+              <p className="text-sm font-black uppercase tracking-[0.1em]">No data available</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={barData} margin={{ top: 16, right: 14, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.5} />
                 <XAxis 
                   dataKey="name" 
@@ -137,14 +137,14 @@ export default function InsightsCharts({ categoryData, storageData, totalItems }
       </Card>
 
       {/* Storage Distribution Pie Chart */}
-      <Card className="overflow-hidden shadow-sm border border-border/50 flex flex-col !rounded-[2.5rem] h-full">
-        <div className="p-4 border-b border-border/40 shrink-0 bg-muted/5">
-          <h3 className="font-serif text-lg font-medium text-foreground flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" /> Storage Distribution
+      <Card className="overflow-hidden !shadow-[6px_6px_0_#000] !border-4 !border-black flex flex-col !rounded-none min-h-[460px] !bg-white">
+        <div className="p-4 border-b-2 border-black shrink-0 bg-[#F6F1E7]">
+          <h3 className="font-serif text-lg font-bold text-black flex items-center gap-2">
+            <Package className="w-4 h-4 text-black" /> Storage Distribution
           </h3>
         </div>
-        <div className="p-4 flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4">
-            <div className="h-full min-h-[250px] max-h-[250px] aspect-square relative">
+        <div className="px-4 py-5 flex-1 min-h-0 flex flex-col items-center justify-start gap-4">
+          <div className="h-[190px] w-full max-w-[220px] relative shrink-0">
                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -153,8 +153,8 @@ export default function InsightsCharts({ categoryData, storageData, totalItems }
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
+                    innerRadius={46}
+                    outerRadius={64}
                     dataKey="value"
                     onMouseEnter={onPieEnter}
                     paddingAngle={4}
@@ -169,32 +169,32 @@ export default function InsightsCharts({ categoryData, storageData, totalItems }
             </div>
 
             {/* Legend / Key */}
-            <div className="flex flex-col gap-4 min-w-[140px]">
-               <div className="flex items-center gap-3 p-3 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-50 transition-colors">
-                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+            <div className="grid w-full max-w-[320px] grid-cols-1 gap-2">
+              <div className="flex items-center gap-3 p-2.5 border-2 border-black bg-white min-w-0">
+                  <div className="p-2 bg-[#DDE6FF] border border-black">
                     <Archive className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pantry</p>
-                    <p className="text-lg font-serif font-medium text-foreground">{storageData.pantry}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black text-black/70 uppercase tracking-wider">Pantry</p>
+                    <p className="text-lg font-serif font-bold text-black">{storageData.pantry}</p>
                   </div>
                </div>
-               <div className="flex items-center gap-3 p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50 transition-colors">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+              <div className="flex items-center gap-3 p-2.5 border-2 border-black bg-white min-w-0">
+                  <div className="p-2 bg-[#D6EBFF] border border-black">
                     <Snowflake className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Fridge</p>
-                    <p className="text-lg font-serif font-medium text-foreground">{storageData.fridge}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black text-black/70 uppercase tracking-wider">Fridge</p>
+                    <p className="text-lg font-serif font-bold text-black">{storageData.fridge}</p>
                   </div>
                </div>
-               <div className="flex items-center gap-3 p-3 rounded-2xl bg-sky-50/50 dark:bg-sky-900/10 hover:bg-sky-50 transition-colors">
-                  <div className="p-2 bg-sky-100 dark:bg-sky-900/30 rounded-xl">
+              <div className="flex items-center gap-3 p-2.5 border-2 border-black bg-white min-w-0">
+                  <div className="p-2 bg-[#D9F3FF] border border-black">
                     <Snowflake className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Freezer</p>
-                    <p className="text-lg font-serif font-medium text-foreground">{storageData.freezer}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black text-black/70 uppercase tracking-wider">Freezer</p>
+                    <p className="text-lg font-serif font-bold text-black">{storageData.freezer}</p>
                   </div>
                </div>
             </div>

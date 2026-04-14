@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Search, Plus, Filter, Loader2, Trash2, Package, Calendar, AlertCircle } from 'lucide-react'
-import { format } from 'date-fns'
-import Card from '@/components/ui/Card'
+import { Loader2, Plus, Search, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import ExpiringSoonCarousel from '@/components/dashboard/ExpiringSoonCarousel'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface InventoryItem {
   _id: string
@@ -29,78 +29,81 @@ interface InventoryItem {
   unit: string
   purchasedAt: string
   openedAt?: string
-  expiryDate?: string // Calculated on client for sorting/display
+  expiryDate?: string
   status?: 'good' | 'expiring' | 'expired'
   daysLeft?: number
+  storageSuggestion?: string
 }
 
 export default function InventoryPage() {
-  const { data: session, status } = useSession()
+  const { isLoaded, isSignedIn, user } = useUser()
   const router = useRouter()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  // CATEGORIES - Could be fetched from DB or kept static
   const CATEGORIES = ['All', 'Vegetables', 'Fruits', 'Dairy', 'Meat', 'Grains', 'Pantry', 'Frozen', 'Beverages', 'Other']
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (isLoaded && !isSignedIn) {
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [isLoaded, isSignedIn, router])
 
   useEffect(() => {
     const fetchInventory = async () => {
-      if (!session?.user) return
-
+      if (!isLoaded || !isSignedIn) return
       try {
         const res = await fetch('/api/inventory')
         if (!res.ok) throw new Error('Failed to fetch inventory')
-        
         const data = await res.json()
         
-        // Enhance data with calculated expiry
         const enhancedData = data.map((item: any) => {
           const product = item.productId
           const storage = item.storageMethodId
           const purchasedAt = new Date(item.purchasedAt)
-          
           let shelfLife = product.baseShelfLifeDays
           const storageName = storage?.name?.toLowerCase() || ''
 
-          if (storageName.includes('freezer') && product.freezerShelfLifeDays) {
-            shelfLife = product.freezerShelfLifeDays
-          } else if ((storageName.includes('fridge') || storageName.includes('refrig')) && product.fridgeShelfLifeDays) {
-            shelfLife = product.fridgeShelfLifeDays
-          } else if (storageName.includes('room') && product.roomTempShelfLifeDays) {
-            shelfLife = product.roomTempShelfLifeDays
-          }
+          if (storageName.includes('freezer')) shelfLife = product.freezerShelfLifeDays ?? shelfLife
+          else if (storageName.includes('fridge') || storageName.includes('refrig')) shelfLife = product.fridgeShelfLifeDays ?? shelfLife
+          else if (storageName.includes('room')) shelfLife = product.roomTempShelfLifeDays ?? shelfLife
 
-          if (item.openedAt) {
-            shelfLife = Math.floor(shelfLife * 0.75)
-          }
-
+          if (item.openedAt) shelfLife = Math.floor(shelfLife * 0.75)
           const expiryDate = new Date(purchasedAt)
           expiryDate.setDate(expiryDate.getDate() + shelfLife)
-          
-          const today = new Date()
-          const daysLeft = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+          const daysLeft = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+
+          const methods = [
+            { key: 'room', label: 'Room Temperature', days: product.roomTempShelfLifeDays ?? product.baseShelfLifeDays },
+            { key: 'fridge', label: 'Refrigerator', days: product.fridgeShelfLifeDays ?? product.baseShelfLifeDays },
+            { key: 'freezer', label: 'Freezer', days: product.freezerShelfLifeDays ?? product.baseShelfLifeDays },
+          ]
+
+          const currentMethodKey = storageName.includes('freezer')
+            ? 'freezer'
+            : storageName.includes('fridge') || storageName.includes('refrig')
+              ? 'fridge'
+              : 'room'
+
+          const currentMethod = methods.find((m) => m.key === currentMethodKey)
+          const bestMethod = methods.reduce((best, next) => (next.days > best.days ? next : best), methods[0])
+
+          let storageSuggestion: string | undefined
+          if (currentMethod && bestMethod.days > currentMethod.days) {
+            const extraDays = bestMethod.days - currentMethod.days
+            if (daysLeft <= 3 || item.status === 'expired') {
+              storageSuggestion = `Try storing in ${bestMethod.label}. This can extend freshness by about ${extraDays} day(s).`
+            }
+          }
           
           let status: 'good' | 'expiring' | 'expired' = 'good'
           if (daysLeft < 0) status = 'expired'
           else if (daysLeft <= 3) status = 'expiring'
 
-          return {
-            ...item,
-            expiryDate: expiryDate.toISOString(),
-            daysLeft,
-            status
-          }
+          return { ...item, expiryDate: expiryDate.toISOString(), daysLeft, status, storageSuggestion }
         })
-
         setItems(enhancedData)
       } catch (error) {
         console.error('Error loading inventory:', error)
@@ -108,31 +111,8 @@ export default function InventoryPage() {
         setLoading(false)
       }
     }
-
-    if (session?.user) {
-      fetchInventory()
-    }
-  }, [session])
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return
-
-    setDeletingId(id)
-    try {
-      const res = await fetch(`/api/inventory/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!res.ok) throw new Error('Failed to delete item')
-
-      setItems(items.filter(item => item._id !== id))
-    } catch (error) {
-      console.error('Error deleting item:', error)
-      alert('Failed to delete item')
-    } finally {
-      setDeletingId(null)
-    }
-  }
+    if (isLoaded && isSignedIn) fetchInventory()
+  }, [isLoaded, isSignedIn])
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.productId?.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -140,17 +120,22 @@ export default function InventoryPage() {
     return matchesSearch && matchesCategory
   })
 
-  // Sort by status urgency then days left
-  filteredItems.sort((a, b) => {
-    if (a.daysLeft === undefined || b.daysLeft === undefined) return 0
-    return a.daysLeft - b.daysLeft
-  })
+  const expiringSoonItems = items.filter(item => item.status === 'expiring' || item.status === 'expired')
+    .sort((a, b) => (a.daysLeft || 0) - (b.daysLeft || 0))
+    .slice(0, 5)
 
-  if (status === 'loading' || loading) {
+  const getStorageBadgeClass = (storageName?: string) => {
+    const name = (storageName || '').toLowerCase()
+    if (name.includes('freezer')) return 'bg-[#1E3A8A] text-white'
+    if (name.includes('fridge') || name.includes('refrig')) return 'bg-[#BFE7FF] text-black'
+    return 'bg-[#FFE66D] text-black'
+  }
+
+  if (!isLoaded || loading) {
     return (
       <DashboardLayout>
-        <div className="flex h-full items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-[#0D631B]" />
         </div>
       </DashboardLayout>
     )
@@ -158,160 +143,238 @@ export default function InventoryPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)] gap-6 overflow-hidden">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-          <div>
-            <h1 className="text-4xl font-serif font-medium text-foreground tracking-tight">Inventory</h1>
-            <p className="text-muted-foreground mt-1 text-lg font-light">Manage your pantry items.</p>
-          </div>
-          <Link href="/add">
-            <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-6 rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Add New Item
-            </button>
-          </Link>
-        </div>
-
-        {/* Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-4 items-center shrink-0">
-          <div className="relative flex-1 w-full group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search items..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-6 py-3.5 rounded-2xl border-2 border-transparent bg-white dark:bg-card hover:bg-white/80 focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 transition-all outline-none shadow-sm text-base"
-            />
-          </div>
-          
-          <div className="relative w-full md:w-auto min-w-[200px] group">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <select 
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full pl-10 pr-10 py-3.5 rounded-2xl border-2 border-transparent bg-white dark:bg-card hover:bg-white/80 focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 transition-all outline-none shadow-sm appearance-none cursor-pointer text-base"
-            >
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground"><path d="m6 9 6 6 6-6"/></svg>
-             </div>
-          </div>
-        </div>
-
-        {/* Inventory List (Cards) */}
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-          {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-20">
-              {filteredItems.map((item) => (
-                <Card 
-                    key={item._id} 
-                    className="group hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 !rounded-[2rem] overflow-visible"
-                >
-                  <div className="p-5 flex flex-col h-full gap-4">
-                    <div className="flex justify-between items-start">
-                        <div className="flex gap-3 items-center">
-                            <div className={cn(
-                                "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 border",
-                                item.productId?.category === 'Vegetables' ? "bg-green-100 text-green-600 border-green-200" :
-                                item.productId?.category === 'Fruits' ? "bg-orange-100 text-orange-600 border-orange-200" :
-                                item.productId?.category === 'Dairy' ? "bg-blue-100 text-blue-600 border-blue-200" :
-                                item.productId?.category === 'Meat' ? "bg-red-100 text-red-600 border-red-200" :
-                                "bg-muted text-muted-foreground border-border"
-                            )}>
-                                <Package className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-serif text-xl font-medium text-foreground leading-tight group-hover:text-primary transition-colors">
-                                    {item.productId?.name || 'Unknown Item'}
-                                </h3>
-                                <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                                    {item.productId?.category || 'Uncategorized'} 
-                                    {item.openedAt && <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">Opened</span>}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <button
-                          onClick={(e) => {
-                              e.preventDefault();
-                              handleDelete(item._id);
-                          }}
-                          disabled={deletingId === item._id}
-                          className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
-                          title="Delete Item"
-                        >
-                          {deletingId === item._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
-                    </div>
-
-                    <div className="mt-auto space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-xl">
-                            <AlertCircle className="h-4 w-4 shrink-0" />
-                            <span className="truncate">Stored in: <span className="font-medium text-foreground">{item.storageMethodId?.name || 'Unknown'}</span></span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                             <div className={cn(
-                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide",
-                                item.status === 'expired' ? 'bg-destructive/10 text-destructive' :
-                                item.status === 'expiring' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
-                                'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                            )}>
-                                <span className={cn("h-1.5 w-1.5 rounded-full", 
-                                     item.status === 'expired' ? 'bg-destructive' :
-                                     item.status === 'expiring' ? 'bg-orange-500' :
-                                     'bg-emerald-500'
-                                )}/>
-                                {item.status === 'expired' ? 'Expired' :
-                                 item.status === 'expiring' ? 'Expiring Soon' :
-                                 'Fresh'}
-                            </div>
-                            
-                            <div className="text-right">
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Expiry</p>
-                                <p className={cn(
-                                    "font-serif text-lg font-medium leading-none",
-                                    item.daysLeft !== undefined && item.daysLeft < 3 ? "text-destructive" : "text-foreground"
-                                )}>
-                                    {item.daysLeft !== undefined ? (
-                                        item.daysLeft < 0 ? `${Math.abs(item.daysLeft)} days ago` :
-                                        item.daysLeft === 0 ? 'Today' :
-                                        `${item.daysLeft} days`
-                                    ) : '-'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+      <div className="max-w-[1400px] mx-auto py-6 md:py-10 px-2 sm:px-4">
+        {/* Top Navigation / Action Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 md:mb-12 gap-4 md:gap-8 sticky top-0 bg-[#F6F1E7] z-30 py-3 md:py-4 px-3 md:px-6 border-4 border-black shadow-[8px_8px_0_#000]">
+            <div className="relative flex-1 w-full max-w-xl group">
+                <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#0D631B] transition-colors" data-icon="search">search</span>
+                <input 
+                    type="text" 
+                    placeholder="Search your pantry..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border-2 border-black py-4 pl-14 pr-6 focus:outline-none transition-all placeholder:text-stone-500 font-manrope font-semibold text-black"
+                />
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-center p-8 border-2 border-dashed border-border/60 rounded-[3rem] bg-muted/5">
-              <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-6">
-                <Package className="h-10 w-10 text-muted-foreground/50" />
+            <div className="flex w-full md:w-auto items-center justify-end gap-3 md:gap-6">
+                <Link href="/add">
+                    <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+              className="bg-[#FFE66D] text-black px-4 sm:px-6 md:px-10 py-3 md:py-4 border-2 border-black font-manrope font-black text-sm md:text-base shadow-[4px_4px_0_#000] flex items-center gap-2 hover:bg-black hover:text-white"
+                    >
+                        <Plus className="h-5 w-5" />
+                        Add New Item
+                    </motion.button>
+                </Link>
+            </div>
+        </div>
+
+        {/* Expiring Soon Section */}
+        <ExpiringSoonCarousel items={expiringSoonItems.map(item => ({
+            _id: item._id,
+            name: item.productId?.name,
+            category: item.productId?.category,
+            daysLeft: item.daysLeft || 0,
+            image: undefined // Could map real images if available
+        }))} />
+
+        {/* Main Inventory Title & Categories */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-6">
+            <div>
+          <h2 className="text-3xl sm:text-4xl font-noto-serif font-bold text-black mb-2">Inventory</h2>
+          <p className="text-black/70 font-manrope text-base sm:text-lg">Every ingredient in a brutalist grid.</p>
+            </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 w-full md:w-auto">
+            {CATEGORIES.map(cat => (
+                    <button 
+                        key={cat}
+                        onClick={() => setCategoryFilter(cat)}
+                        className={cn(
+                  "px-6 py-2.5 font-manrope font-black text-sm uppercase tracking-[0.1em] transition-all whitespace-nowrap border-2 border-black",
+                            categoryFilter === cat 
+                    ? "bg-[#93E1A8] text-black shadow-[4px_4px_0_#000]" 
+                    : "bg-white text-black hover:bg-black hover:text-white"
+                        )}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+        </div>
+
+        {/* Mobile Inventory Cards */}
+        <div className="grid grid-cols-1 gap-4 md:hidden mb-10">
+          {filteredItems.map((item) => (
+            <div key={item._id} className="border-4 border-black bg-[#F4F4EF] p-4 shadow-[6px_6px_0_#000]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">{item.productId?.category}</p>
+                  <h3 className="mt-1 text-2xl font-noto-serif font-bold text-black leading-tight">{item.productId?.name}</h3>
+                </div>
+                <div className={cn(
+                  "px-3 py-1 border-2 border-black text-[10px] font-black uppercase tracking-[0.18em]",
+                  item.status === 'expired' ? 'bg-[#FFD2CC]' : item.status === 'expiring' ? 'bg-[#FFE66D]' : 'bg-[#93E1A8]'
+                )}>
+                  {item.status === 'expired' ? 'Expired' : item.status === 'expiring' ? 'Expiring' : 'Fresh'}
+                </div>
               </div>
-              <h3 className="font-serif text-2xl font-medium text-foreground mb-2">No items found</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-                Your search didn&apos;t match any items in your pantry. Try adjusting your filters or add a new item.
+
+              <div className="mt-4 grid grid-cols-2 gap-3 text-xs font-manrope">
+                <div className="border-2 border-black bg-white p-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/60">Storage</p>
+                  <span className={cn(
+                    'mt-1 inline-flex border-2 border-black px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]',
+                    getStorageBadgeClass(item.storageMethodId?.name)
+                  )}>
+                    {item.storageMethodId?.name || 'Room Temperature'}
+                  </span>
+                </div>
+                <div className="border-2 border-black bg-white p-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/60">Quantity</p>
+                  <p className="mt-1 font-bold text-black">{item.quantity} {item.unit}</p>
+                </div>
+                <div className="col-span-2 border-2 border-black bg-white p-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/60">Freshness</p>
+                  <p className="mt-1 font-bold text-black">
+                    {item.status === 'expired'
+                      ? `Expired ${Math.abs(item.daysLeft || 0)} day(s) ago`
+                      : item.status === 'expiring'
+                        ? `Expires in ${item.daysLeft || 0} day(s)`
+                        : 'Optimal Freshness'}
+                  </p>
+                  {item.storageSuggestion ? (
+                    <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#93000A]">
+                      {item.storageSuggestion}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {filteredItems.length === 0 && (
+            <div className="border-4 border-black bg-white p-6 text-center shadow-[6px_6px_0_#000]">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-black/60">No matching items</p>
+              <h3 className="mt-2 font-noto-serif text-3xl text-black">Nothing fits this filter.</h3>
+              <p className="mt-2 font-manrope text-sm text-black/75">
+                Try a different search term or category, or add a new item to the pantry.
               </p>
-              <Link href="/add">
-                <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 px-6 rounded-full shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Item
-                </button>
+              <Link href="/add" className="mt-4 inline-flex min-h-11 items-center border-2 border-black bg-[#FFE66D] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-black hover:bg-black hover:text-white">
+                Add item
               </Link>
             </div>
           )}
+        </div>
+
+        {/* Inventory List (Editorial Table) */}
+        <div className="hidden md:block bg-[#F4F4EF] overflow-hidden border-4 border-black mb-20 shadow-[8px_8px_0_#000]">
+          <div className="grid grid-cols-12 px-10 py-6 text-[10px] font-black uppercase tracking-[0.3em] text-black border-b-2 border-black">
+                <div className="col-span-5">Item Details</div>
+                <div className="col-span-3 text-center">Expiry Status</div>
+                <div className="col-span-2 text-center">Quantity</div>
+                <div className="col-span-2 text-right">Freshness</div>
+            </div>
+            
+            <AnimatePresence>
+                <div className="divide-y-2 divide-black/10">
+                    {filteredItems.map((item, idx) => (
+                        <motion.div 
+                            key={item._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                      className="group grid grid-cols-12 px-10 py-8 items-center hover:bg-white transition-all cursor-pointer"
+                        >
+                            <div className="col-span-5 flex items-center gap-6">
+                                <div className={cn(
+                          "w-14 h-14 flex items-center justify-center border-2 border-black transition-all shadow-[3px_3px_0_#000] group-hover:scale-105",
+                                    item.productId?.category === 'Vegetables' ? "bg-green-100 text-green-700" :
+                                    item.productId?.category === 'Fruits' ? "bg-orange-100 text-orange-700" :
+                                    item.productId?.category === 'Dairy' ? "bg-blue-100 text-blue-700" :
+                                    "bg-stone-100 text-stone-700"
+                                )}>
+                                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'wght' 300" }}>package_2</span>
+                                </div>
+                                <div className="space-y-1">
+                          <p className="text-xl font-noto-serif font-bold text-black group-hover:text-black transition-colors">{item.productId?.name}</p>
+                                    <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-black/70">{item.productId?.category}</span>
+                            {item.openedAt && <span className="text-[8px] font-black uppercase py-0.5 px-2 border border-black bg-[#FFE66D] text-black">Opened</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="col-span-3">
+                                <div className="flex flex-col items-center">
+                                    <div className={cn(
+                            "px-4 py-1.5 border-2 border-black text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2",
+                            item.status === 'expired' ? "bg-[#FFD2CC] text-black" :
+                            item.status === 'expiring' ? "bg-[#FFE66D] text-black" :
+                            "bg-[#93E1A8] text-black"
+                                    )}>
+                                        <span className={cn("w-1.5 h-1.5 rounded-full",
+                              item.status === 'expired' ? "bg-black" :
+                              item.status === 'expiring' ? "bg-black" :
+                              "bg-black"
+                                        )} />
+                                        {item.status === 'expired' ? `Expired ${Math.abs(item.daysLeft || 0)}d ago` :
+                                         item.status === 'expiring' ? `Expires in ${item.daysLeft}d` :
+                                         'Optimal Freshness'}
+                                    </div>
+                          <span className={cn(
+                            'mt-2 inline-flex border-2 border-black px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]',
+                            getStorageBadgeClass(item.storageMethodId?.name)
+                          )}>
+                            {item.storageMethodId?.name || 'Room Temperature'}
+                          </span>
+                          {item.storageSuggestion ? (
+                            <span className="text-[10px] text-[#93000A] font-ibm-mono uppercase tracking-[0.12em] mt-2 text-center">
+                              {item.storageSuggestion}
+                            </span>
+                          ) : null}
+                                </div>
+                            </div>
+
+                            <div className="col-span-2 text-center">
+                                <p className="text-lg font-manrope font-bold text-stone-600">{item.quantity} <span className="text-xs font-normal opacity-60 uppercase">{item.unit}</span></p>
+                            </div>
+
+                            <div className="col-span-2 flex justify-end">
+                                <div className="w-32 space-y-2">
+                                    <div className="flex justify-between text-[8px] font-bold uppercase tracking-tighter text-stone-400">
+                                        <span>Curated Purity</span>
+                                        <span className={cn(
+                                        (item.daysLeft || 0) < 3 ? "text-black" : "text-black"
+                                        )}>{Math.max(0, Math.min(100, Math.round(((item.daysLeft || 0) / 14) * 100)))}%</span>
+                                    </div>
+                                    <div className="h-1.5 bg-white border border-black overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.max(0, Math.min(100, Math.round(((item.daysLeft || 0) / 14) * 100)))}%` }}
+                                            transition={{ duration: 1 }}
+                                            className={cn(
+                                          "h-full",
+                                          (item.daysLeft || 0) < 3 ? "bg-[#FFE66D]" : "bg-[#93E1A8]"
+                                            )} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </AnimatePresence>
+
+            {filteredItems.length === 0 && (
+              <div className="px-10 py-12 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-black/60">No matching items</p>
+                <h3 className="mt-2 font-noto-serif text-4xl text-black">Nothing fits this filter.</h3>
+                <p className="mt-2 font-manrope text-sm text-black/75">
+                  Change the search/category filters or add a new pantry item.
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </DashboardLayout>

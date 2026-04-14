@@ -2,36 +2,31 @@ import { getApiBaseUrl } from './api'
 
 /**
  * Reverse geocode coordinates to get city name
- * Uses OpenStreetMap Nominatim API for high accuracy
+ * Uses backend proxy to avoid CORS issues
  */
 export async function reverseGeocode(
   latitude: number,
   longitude: number
 ): Promise<string | null> {
   try {
-    // strict=true limits to the specific node if possible
-    // accept-language=en ensures English names
+    const baseUrl = getApiBaseUrl()
+    
+    // First, get weather data by coordinates (which includes location name)
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1&accept-language=en`,
+      `${baseUrl}/api/weather/current?lat=${latitude}&lon=${longitude}`,
       {
+        cache: 'no-store',
         headers: {
-          'User-Agent': 'PantryGuardian/1.0', // Nominatim requires a User-Agent
+          'Cache-Control': 'no-cache'
         }
       }
     )
-
+    
     if (response.ok) {
       const data = await response.json()
-      // improved address parsing logic
-      return data.address?.city ||
-        data.address?.town ||
-        data.address?.village ||
-        data.address?.suburb ||
-        data.address?.county ||
-        data.address?.state_district ||
-        null
+      return data.locationName || data.city || null
     }
-
+    
     return null
   } catch (error) {
     console.error('Reverse geocode failed:', error)
@@ -67,7 +62,7 @@ export function getUserCoordinates(): Promise<{ latitude: number; longitude: num
       },
       (error) => {
         console.warn('High accuracy geolocation failed:', error.message)
-
+        
         // If high accuracy fails, try with lower accuracy as fallback
         if (error.code === error.TIMEOUT) {
           console.log('Retrying with lower accuracy...')
@@ -128,7 +123,7 @@ export async function checkGeolocationPermission(): Promise<'granted' | 'denied'
   if (!navigator.permissions) {
     return 'prompt' // Can't check, assume we need to prompt
   }
-
+  
   try {
     const result = await navigator.permissions.query({ name: 'geolocation' })
     return result.state

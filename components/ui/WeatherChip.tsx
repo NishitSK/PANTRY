@@ -1,12 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { getApiBaseUrl } from '@/lib/api'
 
 import { Thermometer, Droplets, RotateCcw } from 'lucide-react'
 
 export default function WeatherChip() {
-  const { data: session } = useSession()
   const [weather, setWeather] = useState<{ tempC: number; humidity: number; locationName?: string; feelsLikeC?: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [userCity, setUserCity] = useState<string>('')
@@ -15,7 +13,7 @@ export default function WeatherChip() {
 
   useEffect(() => {
     fetchUserCity()
-  }, [session])
+  }, [])
 
   useEffect(() => {
     if (coords) {
@@ -49,18 +47,20 @@ export default function WeatherChip() {
   }, [])
 
   const fetchUserCity = async () => {
-    if (!session?.user?.email) return
-    
     try {
       const baseUrl = getApiBaseUrl()
       const response = await fetch(`${baseUrl}/api/user/profile`)
       if (response.ok) {
         const data = await response.json()
         setUserCity(data.city || '')
+      } else {
+        setUserCity('')
+        setLoading(false)
       }
     } catch (error) {
       console.error('Failed to fetch user city:', error)
       setUserCity('')
+      setLoading(false)
     }
   }
 
@@ -68,6 +68,12 @@ export default function WeatherChip() {
     try {
       // Sanitize city name to avoid 404s
       const cleanCity = userCity.replace(/\b(taluk|district)\b/gi, '').trim()
+
+      if (!coords && !cleanCity) {
+        setWeather(null)
+        setLoading(false)
+        return
+      }
       
       const baseUrl = getApiBaseUrl()
       const query = coords ? `lat=${coords.lat}&lon=${coords.lon}` : `city=${encodeURIComponent(cleanCity)}`
@@ -97,20 +103,20 @@ export default function WeatherChip() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-card rounded-xl border border-border">
-        <div className="w-4 h-4 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-        <span className="text-xs text-muted-foreground font-medium">Loading...</span>
+      <div className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-black shadow-[3px_3px_0_#000]">
+        <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+        <span className="text-[10px] text-black font-black uppercase tracking-[0.14em]">Loading</span>
       </div>
     )
   }
 
   if (!weather) {
     return (
-      <div className="flex items-center gap-3 px-4 py-3 bg-card rounded-xl border border-border border-dashed">
-        <div className="p-1.5 bg-muted rounded-full text-muted-foreground">
+      <div className="flex items-center gap-3 px-3 py-2 bg-white border-2 border-black border-dashed">
+        <div className="p-1.5 bg-[#FFE66D] border border-black text-black">
           <Thermometer className="w-4 h-4" />
         </div>
-        <span className="text-xs text-muted-foreground font-medium">Set Location</span>
+        <span className="text-[10px] text-black font-black uppercase tracking-[0.14em]">Set Location</span>
       </div>
     )
   }
@@ -125,29 +131,29 @@ export default function WeatherChip() {
   }
 
   return (
-    <div className="flex flex-col gap-2 p-3 bg-card hover:bg-muted/50 transition-colors rounded-xl border border-border shadow-sm group" title={tooltip}>
+    <div className="flex flex-col gap-2 p-3 bg-white border-2 border-black shadow-[4px_4px_0_#000] group" title={tooltip}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-full text-primary group-hover:bg-primary/20 transition-colors">
+          <div className="p-2 bg-[#93E1A8] border border-black text-black">
              <Thermometer className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xl font-bold text-foreground leading-none">{weather.tempC.toFixed(0)}°</p>
-            <p className="text-xs font-medium text-muted-foreground mt-0.5 max-w-[90px] truncate">
+            <p className="text-xl font-black text-black leading-none">{weather.tempC.toFixed(0)}°</p>
+            <p className="text-[10px] font-black text-black/70 mt-0.5 max-w-[90px] truncate uppercase tracking-[0.08em]">
               {getDisplayLocation()}
             </p>
           </div>
         </div>
         
         <div className="flex flex-col items-end gap-1.5">
-          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground bg-secondary/10 px-1.5 py-0.5 rounded-md text-secondary">
+          <div className="flex items-center gap-1 text-[10px] font-black text-black bg-[#FFE66D] px-1.5 py-0.5 border border-black uppercase tracking-[0.08em]">
             <Droplets className="w-3 h-3" />
             <span>{Math.round(weather.humidity)}%</span>
           </div>
           <button
             onClick={fetchWeather}
-            className={`text-xs p-1 rounded-md hover:bg-muted transition-colors ${
-              isStale ? 'text-amber-500' : 'text-muted-foreground/50 hover:text-foreground'
+            className={`text-xs p-1 border border-black transition-colors ${
+              isStale ? 'bg-[#FFE66D] text-black' : 'bg-white text-black hover:bg-black hover:text-white'
             }`}
             title="Refresh"
           >

@@ -22,3 +22,6 @@ Thumbs.db
 # Misc
 .antigravity
 dist
+
+# clerk configuration (can include secrets)
+/.clerk/

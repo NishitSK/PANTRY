@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import connectDB from '@/lib/mongodb'
 import { User, InventoryItem, Product, StorageMethod, WeatherSnapshot, Prediction } from '@/models'
 import { predict } from '@/lib/prediction'
@@ -10,19 +9,38 @@ import { getCurrentWeather } from '@/lib/weather'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const WHOLE_NUMBER_UNITS = new Set(['piece', 'pieces', 'package', 'packages', 'unit', 'units', 'pcs'])
+
+const requiresWholeNumber = (unit: string) => WHOLE_NUMBER_UNITS.has(unit.toLowerCase())
+
+async function getOrCreateDbUser() {
+  const { userId } = await auth()
+  if (!userId) return null
+
+  const clerkUser = await currentUser()
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress
+  if (!email) return null
+
+  let user = await User.findOne({ email })
+  if (!user) {
+    user = await User.create({
+      email,
+      name: clerkUser?.fullName || clerkUser?.firstName || undefined,
+      image: clerkUser?.imageUrl,
+    })
+  }
+
+  return user
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     await connectDB()
 
-    const user = await User.findOne({ email: session.user.email })
+    const user = await getOrCreateDbUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const items = await InventoryItem.find({ userId: user._id.toString() })
@@ -67,17 +85,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     await connectDB()
 
-    const user = await User.findOne({ email: session.user.email })
+    const user = await getOrCreateDbUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { productId, storageMethodId, quantity, unit, purchasedAt, openedAt, notes } = await req.json()
@@ -92,6 +105,21 @@ export async function POST(req: NextRequest) {
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
+      )
+    }
+
+    const parsedQuantity = Number(quantity)
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      return NextResponse.json(
+        { error: 'Quantity must be a positive number' },
+        { status: 400 }
+      )
+    }
+
+    if (requiresWholeNumber(String(unit)) && !Number.isInteger(parsedQuantity)) {
+      return NextResponse.json(
+        { error: 'Quantity must be a whole number for piece-based units' },
         { status: 400 }
       )
     }
@@ -115,7 +143,7 @@ export async function POST(req: NextRequest) {
       userId: user._id.toString(),
       productId,
       storageMethodId,
-      quantity: parseFloat(quantity),
+      quantity: parsedQuantity,
       unit,
       purchasedAt: new Date(purchasedAt),
       openedAt: openedAt ? new Date(openedAt) : null,

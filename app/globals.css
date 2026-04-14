@@ -4,74 +4,73 @@
 
 @layer base {
   :root {
-    --background: 40 33% 98%;
-    /* Cream White */
-    --foreground: 140 30% 15%;
-    /* Deep Forest Green */
+    --background: 45 33% 96%;
+    --foreground: 0 0% 6%;
 
     --card: 0 0% 100%;
-    --card-foreground: 140 30% 15%;
+    --card-foreground: 0 0% 6%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 140 30% 15%;
+    --popover-foreground: 0 0% 6%;
 
-    --primary: 140 30% 35%;
-    /* Muted Forest Green */
-    --primary-foreground: 40 33% 98%;
+    --primary: 78 100% 44%;
+    --primary-strong: 78 100% 34%;
+    --primary-foreground: 0 0% 6%;
 
-    --secondary: 40 20% 94%;
-    /* Light Beige */
-    --secondary-foreground: 140 30% 15%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 40 20% 94%;
-    --muted-foreground: 140 10% 45%;
+    --muted: 45 12% 86%;
+    --muted-foreground: 0 0% 34%;
 
-    --accent: 142 70% 45%;
-    /* Bright Fresh Green */
-    --accent-foreground: 40 33% 98%;
+    --accent: 50 100% 92%;
+    --accent-foreground: 0 0% 6%;
 
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 40 33% 98%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 40 15% 90%;
-    --input: 40 15% 90%;
-    --ring: 140 30% 35%;
+    --border: 0 0% 6%;
+    --input: 0 0% 6%;
+    --ring: 0 0% 6%;
+    --surface: 0 0% 100%;
+    --text-main: 0 0% 6%;
+    --text-muted: 0 0% 32%;
 
-    --radius: 1rem;
-    /* More rounded, organic feel */
+    --radius: 0px;
   }
 
   .dark {
-    --background: 140 30% 10%;
-    /* Very Dark Green */
-    --foreground: 40 33% 98%;
+    --background: 0 0% 6%;
+    --foreground: 45 33% 96%;
 
-    --card: 140 25% 15%;
-    --card-foreground: 40 33% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 45 33% 96%;
 
-    --popover: 140 25% 15%;
-    --popover-foreground: 40 33% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 45 33% 96%;
 
-    --primary: 140 40% 50%;
-    /* Lighter Forest Green for dark mode */
-    --primary-foreground: 140 30% 10%;
+    --primary: 78 100% 52%;
+    --primary-strong: 78 100% 42%;
+    --primary-foreground: 0 0% 6%;
 
-    --secondary: 140 20% 20%;
-    --secondary-foreground: 40 33% 98%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 45 33% 96%;
 
-    --muted: 140 20% 20%;
-    --muted-foreground: 140 15% 65%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 72%;
 
-    --accent: 75 50% 60%;
-    /* Brighter Lime for dark mode */
-    --accent-foreground: 140 30% 10%;
+    --accent: 0 0% 14%;
+    --accent-foreground: 45 33% 96%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 45 33% 96%;
 
-    --border: 140 20% 20%;
-    --input: 140 20% 20%;
-    --ring: 140 40% 50%;
+    --border: 45 33% 96%;
+    --input: 45 33% 96%;
+    --ring: 78 100% 52%;
+    --surface: 0 0% 10%;
+    --text-main: 45 33% 96%;
+    --text-muted: 0 0% 74%;
   }
 }
 
@@ -79,90 +78,100 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image:
+      linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 100%),
+      linear-gradient(0deg, rgba(0,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+    overflow-x: hidden;
+    background-size: auto, 100% 24px, 24px 100%;
+  }
+
+  .dark body {
+    background-image:
+      linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.88) 100%),
+      linear-gradient(0deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  }
+
+  body[data-pg-loading='true'] .thin-footer {
+    display: none;
   }
 }
 
-html,
-body {
-  height: 100%;
+@layer components {
+  .glass {
+    @apply bg-surface border-2 border-black shadow-brutal;
+  }
+  
+  .editorial-underline {
+    position: relative;
+  }
+  
+  .editorial-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: currentColor;
+    opacity: 1;
+  }
+
+  .tonal-section {
+    @apply bg-background border-y-2 border-black dark:border-white;
+  }
+
+  .brutalist-panel {
+    @apply bg-surface border-2 border-black shadow-brutal-lg;
+  }
+
+  .brutalist-tag {
+    @apply inline-flex items-center gap-2 border-2 border-black bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] text-black;
+  }
+
+  .brutalist-stat {
+    @apply border-2 border-black bg-surface px-5 py-4 shadow-brutal;
+  }
+
+  .brutalist-rule {
+    @apply h-[2px] bg-black dark:bg-white;
+  }
+
+  .brutalist-grid {
+    background-image: linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .brutalist-grid {
+    background-image: linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  }
 }
 
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+/* Material Symbols Adjustments */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
 }
 
-.card {
-  @apply rounded-xl bg-card text-card-foreground shadow-sm border;
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
 }
 
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.75rem;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  line-height: 1.25rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
-  border: none;
+.animate-blob {
+  animation: blob 7s infinite;
 }
 
-.btn-primary {
-  background-color: #2a62e6;
-  color: #fff;
+.animation-delay-2000 {
+  animation-delay: 2s;
 }
 
-.btn-primary:hover {
-  background-color: #234fc0;
-}
-
-.btn-ghost {
-  background: transparent;
-  color: hsl(var(--foreground));
-}
-
-.btn-ghost:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.dark .btn-ghost:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1rem;
-}
-
-.badge-soft {
-  background-color: #d9ecff;
-  color: #234fc0;
-}
-
-.dark .badge-soft {
-  background-color: #1e3a8a;
-  color: #bfdbfe;
-}
-
-.badge-muted {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: hsl(var(--foreground));
-}
-
-.dark .badge-muted {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: hsl(var(--foreground));
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

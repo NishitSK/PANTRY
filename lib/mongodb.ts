@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI
+const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL
 
 interface Cached {
     conn: typeof mongoose | null
@@ -19,7 +19,11 @@ if (!global.mongoose) {
 
 async function connectDB() {
     if (!MONGODB_URI) {
-        throw new Error('Please define the MONGODB_URI environment variable inside .env')
+        throw new Error('Please define MONGODB_URI in .env (MongoDB connection string).')
+    }
+
+    if (!/^mongodb(\+srv)?:\/\//.test(MONGODB_URI)) {
+        throw new Error('MONGODB_URI must be a valid MongoDB URI (mongodb:// or mongodb+srv://).')
     }
 
     if (cached.conn) {

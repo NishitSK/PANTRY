@@ -5,7 +5,7 @@ export interface IUser extends Document {
     passwordHash?: string
     name?: string
     image?: string
-    city: string
+    city?: string
     createdAt: Date
     updatedAt: Date
 }
@@ -32,7 +32,6 @@ const UserSchema = new Schema<IUser>(
         },
         city: {
             type: String,
-            default: 'London',
         },
     },
     {

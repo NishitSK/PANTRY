@@ -6,6 +6,7 @@ export { default as WeatherSnapshot } from './WeatherSnapshot'
 export { default as Prediction } from './Prediction'
 export { default as Feedback } from './Feedback'
 export { default as Recipe } from './Recipe'
+export { default as PushSubscriber } from './PushSubscriber'
 
 export type { IUser } from './User'
 export type { IProduct } from './Product'

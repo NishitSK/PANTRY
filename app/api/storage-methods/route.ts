@@ -1,21 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import connectDB from '@/lib/mongodb'
-import { StorageMethod } from '@/models'
+import { StorageMethod, User } from '@/models'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+async function getOrCreateDbUser() {
+  const { userId } = await auth()
+  if (!userId) return null
+
+  const clerkUser = await currentUser()
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress
+  if (!email) return null
+
+  let user = await User.findOne({ email })
+  if (!user) {
+    user = await User.create({
+      email,
+      name: clerkUser?.fullName || clerkUser?.firstName || undefined,
+      image: clerkUser?.imageUrl,
+    })
+  }
+
+  return user
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    await connectDB()
+
+    const user = await getOrCreateDbUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    await connectDB()
 
     const storageMethods = await StorageMethod.find().sort({ name: 1 }).lean()
 

@@ -2,14 +2,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut, useSession } from 'next-auth/react'
+import { SignOutButton, useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/shadcn-button'
 import WeatherChip from '@/components/ui/WeatherChip'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const links = [
+  { href: '/', label: 'Website' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/inventory', label: 'Inventory' },
   { href: '/add', label: 'Add Item' },
@@ -19,34 +19,34 @@ const links = [
 
 export default function Header() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { isSignedIn } = useUser()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200/70 bg-white/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 supports-[backdrop-filter]:dark:bg-gray-900/60">
+    <header className="sticky top-0 z-40 border-b-2 border-black bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="h-14 flex items-center justify-between gap-2">
+        <div className="flex h-16 items-center justify-between gap-3">
           {/* Left: Brand */}
           <div className="flex items-center gap-2">
-            <Link href="/dashboard" className="inline-flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-brand-600"/>
-              <span className="text-lg font-semibold tracking-tight text-gray-900 dark:text-slate-100">
-                <span className="text-brand-700 dark:text-brand-300">Pantry</span> Guardian
+            <Link href="/dashboard" className="inline-flex items-center gap-3 border-2 border-black bg-surface px-3 py-2 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+              <img src="/icon.svg" alt="Pantry Guardian logo" className="h-8 w-8 border-2 border-black bg-white object-contain" />
+              <span className="hidden sm:inline font-anton text-xl uppercase tracking-[0.08em] text-textMain">
+                Pantry Guardian
               </span>
             </Link>
           </div>
 
           {/* Center: Nav (Desktop) */}
-          {session && (
-            <nav className="hidden md:flex items-center gap-1">
+          {isSignedIn && (
+            <nav className="hidden items-center gap-2 md:flex">
               {links.map(l => {
                 const active = pathname === l.href
-                const base = 'px-3 py-2 rounded-lg text-sm font-medium transition-colors'
+                const base = 'border-2 border-black px-3 py-2 font-ibm-mono text-[10px] uppercase tracking-[0.28em] transition-transform hover:-translate-y-1'
                 const cls = active
-                  ? `${base} bg-brand-600 text-white shadow-sm`
+                  ? `${base} bg-primary text-black`
                   : `${base} text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10`
                 return (
-                  <Link key={l.href} href={l.href} className={cls}>{l.label}</Link>
+                  <Link key={l.href} href={l.href} prefetch className={cls}>{l.label}</Link>
                 )
               })}
             </nav>
@@ -57,26 +57,27 @@ export default function Header() {
             <div className="hidden sm:block">
               <WeatherChip />
             </div>
-            <ThemeToggle />
             
             {/* Mobile Menu Toggle */}
-            {session && (
+            {isSignedIn && (
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="md:hidden"
+                className="border-2 border-black bg-[#FFE66D] text-black hover:bg-black hover:text-white md:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             )}
 
-            {session ? (
-              <Button variant="ghost" className="hidden md:inline-flex px-3 py-2" onClick={()=>signOut({ callbackUrl: '/auth/login' })}>Sign out</Button>
+            {isSignedIn ? (
+              <SignOutButton redirectUrl="/auth/login">
+                <Button variant="ghost" className="hidden md:inline-flex border-2 border-black bg-white text-black hover:bg-black hover:text-white px-3 py-2">Sign out</Button>
+              </SignOutButton>
             ) : (
               <div className="flex gap-2">
-                 <Link href="/auth/login"><Button variant="ghost" size="sm">Login</Button></Link>
-                 <Link href="/auth/login"><Button size="sm">Get Started</Button></Link>
+                 <Link href="/auth/login"><Button variant="ghost" size="sm" className="border-2 border-black bg-white text-black hover:bg-black hover:text-white">Login</Button></Link>
+                 <Link href="/auth/login"><Button size="sm" className="border-2 border-black bg-[#FFE66D] text-black hover:bg-black hover:text-white">Get Started</Button></Link>
               </div>
             )}
           </div>
@@ -85,15 +86,15 @@ export default function Header() {
 
       {/* Mobile Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen && session && (
+        {isMobileMenuOpen && isSignedIn && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden"
+            className="max-h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden border-t-2 border-black bg-background md:hidden"
           >
             <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center justify-between border-b-2 border-black pb-4">
                  <WeatherChip />
               </div>
               <nav className="flex flex-col gap-2">
@@ -103,23 +104,25 @@ export default function Header() {
                     <Link 
                       key={l.href} 
                       href={l.href}
+                      prefetch
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      className={`border-2 border-black px-4 py-3 font-ibm-mono text-[10px] uppercase tracking-[0.28em] transition-colors ${
                         active 
-                          ? 'bg-brand-600 text-white' 
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          ? 'bg-primary text-black' 
+                          : 'text-textMain hover:bg-black hover:text-white'
                       }`}
                     >
                       {l.label}
                     </Link>
                   )
                 })}
-                <button 
-                  onClick={() => signOut({ callbackUrl: '/auth/login' })}
-                  className="px-4 py-3 rounded-lg text-base font-medium text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  Sign out
-                </button>
+                <SignOutButton redirectUrl="/auth/login">
+                  <button 
+                    className="border-2 border-black px-4 py-3 text-left font-ibm-mono text-[10px] uppercase tracking-[0.28em] bg-white text-black transition-colors hover:bg-black hover:text-white"
+                  >
+                    Sign out
+                  </button>
+                </SignOutButton>
               </nav>
             </div>
           </motion.div>

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Button } from '@/components/ui/shadcn-button'
-import { Camera, Image as ImageIcon, X, ScanLine, FileText } from 'lucide-react'
-import { createWorker } from 'tesseract.js'
+import { Button } from '@/components/ui/Button'
+import { Camera, Image as ImageIcon, X, Sparkles } from 'lucide-react'
+import Image from 'next/image'
 
 interface ImageCaptureProps {
   onImageCaptured?: (file: File) => void
@@ -13,7 +13,6 @@ interface ImageCaptureProps {
 export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: ImageCaptureProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
-  // OCR Mode is now implicit/always on for the receipt scanner
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,107 +44,60 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
     }
   }
 
-  const preprocessImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        
-        // 1. Resize (Max 1500px)
-        const MAX_DIMENSION = 1500
-        let width = img.width
-        let height = img.height
-        
-        if (width > height) {
-          if (width > MAX_DIMENSION) {
-            height *= MAX_DIMENSION / width
-            width = MAX_DIMENSION
-          }
-        } else {
-          if (height > MAX_DIMENSION) {
-            width *= MAX_DIMENSION / height
-            height = MAX_DIMENSION
-          }
-        }
-        
-        canvas.width = width
-        canvas.height = height
-        
-        if (!ctx) {
-          resolve(URL.createObjectURL(file))
-          return
-        }
-
-        ctx.drawImage(img, 0, 0, width, height)
-        
-        // 2. Grayscale & Contrast
-        const imageData = ctx.getImageData(0, 0, width, height)
-        const data = imageData.data
-        const contrast = 50 // Contrast factor (0-100+)
-        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast))
-
-        for (let i = 0; i < data.length; i += 4) {
-          // Grayscale
-          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3
-          
-          // Contrast
-          const c = factor * (avg - 128) + 128
-          
-          data[i] = c     // R
-          data[i + 1] = c // G
-          data[i + 2] = c // B
-        }
-        
-        ctx.putImageData(imageData, 0, 0)
-        resolve(canvas.toDataURL('image/jpeg', 0.9))
-      }
-      img.src = URL.createObjectURL(file)
-    })
-  }
-
-  const performOcr = async (imageInput: File | string): Promise<string> => {
-    const worker = await createWorker('eng');
-    const ret = await worker.recognize(imageInput);
-    await worker.terminate();
-    return ret.data.text;
-  }
-
   const handleAnalyze = async () => {
     if (!capturedFile) return
     
     setAnalyzing(true)
     
     try {
-      const formData = new FormData()
-      formData.append('image', capturedFile) // Send original image to backend for storage/display if needed
+      const analyzeWithServer = async (extractedText?: string) => {
+        const formData = new FormData()
+        formData.append('image', capturedFile)
+        if (extractedText) {
+          formData.append('extractedText', extractedText)
+        }
 
-      // Always perform OCR since "Vision Mode" is deprecated
-      try {
-        // Preprocess image for better OCR
-        console.log("Preprocessing image...")
-        const preprocessedImage = await preprocessImage(capturedFile)
-        
-        console.log("Starting OCR...")
-        const text = await performOcr(preprocessedImage);
-        console.log("Extracted Text:", text);
-        formData.append('extractedText', text);
-      } catch (ocrError) {
-        console.error("OCR Failed:", ocrError);
-        alert("Could not read text from image. Please try a clearer photo.");
-        setAnalyzing(false);
-        return; 
+        const res = await fetch('/api/analyze-image', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const contentType = res.headers.get('content-type') || ''
+        const rawBody = await res.text()
+
+        let data: any = null
+        if (contentType.includes('application/json')) {
+          data = rawBody ? JSON.parse(rawBody) : null
+        } else {
+          data = {
+            error: rawBody.includes('<!DOCTYPE')
+              ? 'The image analysis server returned an HTML error page. Check the server logs and reload.'
+              : rawBody || 'Analysis failed',
+          }
+        }
+
+        if (!res.ok) {
+          throw new Error(data?.error || 'Analysis failed')
+        }
+
+        return data
       }
 
-      const res = await fetch('/api/analyze-image', {
-        method: 'POST',
-        body: formData
-      })
+      let data: any
 
-      const data = await res.json()
+      try {
+        data = await analyzeWithServer()
+      } catch (serverError: any) {
+        // Fallback: run OCR in browser and send extracted text to the same API route.
+        const { recognize } = await import('tesseract.js')
+        const result = await recognize(capturedFile, 'eng')
+        const fallbackText = String(result?.data?.text || '').trim()
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Analysis failed')
+        if (!fallbackText) {
+          throw new Error(serverError?.message || 'Could not detect text from image')
+        }
+
+        data = await analyzeWithServer(fallbackText)
       }
 
       if (onAnalysisComplete) {
@@ -153,7 +105,7 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
       }
     } catch (error: any) {
       console.error('Analysis error:', error)
-      alert(error.message || 'Failed to analyze image')
+      alert(error?.message || 'Failed to analyze image')
     } finally {
       setAnalyzing(false)
     }
@@ -164,38 +116,39 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
   }
 
   return (
-    <div className="w-full bg-card text-card-foreground rounded-xl border border-border overflow-hidden shadow-sm transition-all">
-      <div className="p-3 border-b border-border flex items-center justify-between">
-        <h3 className="font-semibold flex items-center gap-2 text-foreground text-sm">
-          <ScanLine className="h-4 w-4 text-primary" />
-          Receipt Scanner
+    <div className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm transition-all">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <h3 className="font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+          <Sparkles className="h-4 w-4 text-purple-500" />
+          AI Smart Scan
         </h3>
-        <span className="text-[10px] font-medium px-2 py-0.5 bg-muted text-muted-foreground rounded-full border border-border">
-          Text Recognition
+        <span className="text-xs font-medium px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 rounded-full">
+          Beta
         </span>
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
         {!preview ? (
           <div 
             onClick={triggerCamera}
-            className="border-2 border-dashed border-muted-foreground/20 rounded-lg py-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors gap-2"
+            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors gap-3"
           >
-            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-              <Camera className="h-5 w-5 text-muted-foreground" />
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <Camera className="h-6 w-6 text-gray-500 dark:text-gray-400" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground">
-                Take photo / Upload
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                Take a photo or upload
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Scan a receipt or grocery list
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Scan your grocery receipt or items
               </p>
             </div>
           </div>
         ) : (
           <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5">
             <div className="aspect-video relative w-full">
+               {/* Using regular img for preview to avoid dealing with next/image complexity for blobs */}
                <img 
                  src={preview} 
                  alt="Preview" 
@@ -212,7 +165,7 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
               </button>
             </div>
 
-            <div className="p-3 bg-card border-t border-border flex justify-end gap-3">
+            <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -222,16 +175,16 @@ export default function ImageCapture({ onImageCaptured, onAnalysisComplete }: Im
               </Button>
               <Button 
                 size="sm" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+                className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
                 onClick={handleAnalyze}
                 disabled={analyzing}
               >
                 {analyzing ? (
-                  <>Reading Text...</>
+                  <>Processing...</>
                 ) : (
                   <>
-                    <FileText className="h-4 w-4" />
-                    Extract Items
+                    <Sparkles className="h-4 w-4" />
+                    Analyze with AI
                   </>
                 )}
               </Button>

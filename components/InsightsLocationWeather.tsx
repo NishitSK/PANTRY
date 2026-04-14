@@ -1,9 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/shadcn-button'
+import { Button } from '@/components/ui/Button'
 import { getApiBaseUrl } from '@/lib/api'
-import { MapPin, Thermometer, Droplets, Clock } from 'lucide-react'
 
 export default function InsightsLocationWeather() {
   const [city, setCity] = useState('')
@@ -21,13 +20,10 @@ export default function InsightsLocationWeather() {
         const r = await fetch(`${baseUrl}/api/user/profile`, { cache: 'no-store' })
         if (r.ok) {
           const data = await r.json()
-          const rawCity = data.city || ''
-          // Sanitize immediately on load
-          const cleanCity = rawCity.replace(/\b(taluk|district)\b/gi, '').trim()
-          
-          setCity(cleanCity)
-          if (cleanCity) {
-            await fetchWeather(cleanCity)
+          const c = (data.city || '').trim()
+          setCity(c)
+          if (c) {
+            await fetchWeather(c)
           }
         }
       } catch (e) {
@@ -41,17 +37,15 @@ export default function InsightsLocationWeather() {
   const fetchWeather = async (targetCity: string) => {
     setFetchingWeather(true)
     try {
-      const cleanCity = targetCity.replace(/\b(taluk|district)\b/gi, '').trim()
-      console.log('Fetching weather for:', cleanCity)
-      
+      console.log('Fetching weather for:', targetCity)
       const baseUrl = getApiBaseUrl()
-      const r = await fetch(`${baseUrl}/api/weather/current?city=${encodeURIComponent(cleanCity)}&t=${Date.now()}`, {
+      const r = await fetch(`${baseUrl}/api/weather/current?city=${encodeURIComponent(targetCity)}&t=${Date.now()}`, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' }
       })
       if (r.ok) {
         const data = await r.json()
-        setWeather({ tempC: data.tempC, humidity: data.humidity, locationName: data.locationName || cleanCity })
+        setWeather({ tempC: data.tempC, humidity: data.humidity, locationName: data.locationName || targetCity })
       } else {
         setMsg('Weather service unavailable')
       }
@@ -67,19 +61,20 @@ export default function InsightsLocationWeather() {
     setSaving(true)
     setMsg('')
     try {
-      // sanitize city name: remove 'taluk', 'district', and extra spaces
-      const cleanCity = city.replace(/\b(taluk|district)\b/gi, '').trim()
-      
       const baseUrl = getApiBaseUrl()
       const r = await fetch(`${baseUrl}/api/user/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city: cleanCity })
+        body: JSON.stringify({ city })
       })
       if (r.ok) {
-        setCity(cleanCity) // Update input to show cleaned name
         setMsg('Location saved. Weather updated.')
-        await fetchWeather(cleanCity)
+        const trimmedCity = city.trim()
+        if (trimmedCity) {
+          await fetchWeather(trimmedCity)
+        } else {
+          setWeather(null)
+        }
         setTimeout(() => setMsg(''), 2500)
       } else {
         setMsg('Failed to save location')
@@ -156,84 +151,51 @@ export default function InsightsLocationWeather() {
   }
 
   return (
-    <Card className="!rounded-[2rem] border-border/50 shadow-sm h-full flex flex-col justify-center p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="relative group flex-1">
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="Location..."
-              className="w-full pl-3 pr-8 py-2 text-sm border border-border/50 rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-muted/30 text-foreground"
-            />
-            <button
-              onClick={handleDetect}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
-              title="Detect"
-            >
-              <MapPin className="w-3 h-3" />
-            </button>
+    <Card className="!rounded-none !border-4 !border-black !shadow-[6px_6px_0_#000] !bg-white p-4">
+      <div className="flex flex-col md:flex-row md:items-end gap-4">
+        <div className="flex-1">
+          <label className="block text-xs font-black uppercase tracking-[0.12em] text-black mb-1">Insights Location</label>
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="e.g., Mumbai, Delhi, Bengaluru"
+            className="w-full px-3 py-2 border-2 border-black focus:outline-none bg-white text-black"
+          />
+          <p className="text-[10px] text-black/70 mt-1 font-black uppercase tracking-[0.08em]">Used for weather analytics and navbar display.</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} size="sm" className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-sm">
-            {saving ? '...' : 'Save'}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleDetect} className="bg-[#93E1A8] text-black border-2 border-black hover:bg-black hover:text-white">Detect</Button>
+          <Button onClick={handleSave} disabled={saving} className="bg-[#FFE66D] text-black border-2 border-black hover:bg-black hover:text-white">{saving ? 'Saving...' : 'Save'}</Button>
+        </div>
       </div>
 
       {msg && (
-        <div className="mb-2 text-[10px] text-blue-600 dark:text-blue-400 truncate px-1">
-          {msg}
-        </div>
+        <div className="mt-3 p-3 bg-[#FFF3C4] border-2 border-black text-black text-xs font-black uppercase tracking-[0.08em]">{msg}</div>
       )}
 
-      {weather ? (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 hover:shadow-md transition-all group">
-            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-full group-hover:scale-110 transition-transform">
-              <Thermometer className="w-3 h-3 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div className="text-center">
-              <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">Temp</div>
-              <div className="text-lg font-serif font-medium text-foreground">
-                {fetchingWeather ? '..' : `${Math.round(weather.tempC)}°`}
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-3 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 hover:shadow-md transition-all group">
-            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
-              <Droplets className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="text-center">
-              <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">Humidity</div>
-              <div className="text-lg font-serif font-medium text-foreground">
-                {fetchingWeather ? '..' : `${Math.round(weather.humidity)}%`}
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-2 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 group">
-             <div className="flex items-center gap-1 mb-0.5">
-                <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">Loc</span>
-            </div>
-            <div className="text-xs font-bold text-foreground truncate w-full text-center px-1" title={weather?.locationName || city || '-'}>
-                {weather?.locationName || city || '-'}
-            </div>
-          </div>
-
-          <div className="p-2 bg-card rounded-2xl border border-border/50 shadow-sm flex flex-col items-center justify-center gap-1 group">
-             <div className="flex items-center gap-1 mb-0.5">
-                <Clock className="w-3 h-3 text-violet-600 dark:text-violet-400" />
-                <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">Time</span>
-            </div>
-             <div className="text-xs font-bold text-foreground">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 bg-white border-2 border-black text-center">
+          <div className="text-[10px] text-black/70 font-black uppercase tracking-[0.12em]">Temperature</div>
+          <div className="text-2xl font-bold text-black">
+            {fetchingWeather ? '...' : (weather ? `${Math.round(weather.tempC)}°C` : '-')}
           </div>
         </div>
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-muted/5 rounded-2xl border border-dashed border-border/50 p-2">
-          <p className="text-xs">Set location</p>
+        <div className="p-4 bg-white border-2 border-black text-center">
+          <div className="text-[10px] text-black/70 font-black uppercase tracking-[0.12em]">Humidity</div>
+          <div className="text-2xl font-bold text-black">
+            {fetchingWeather ? '...' : (weather ? `${Math.round(weather.humidity)}%` : '-')}
+          </div>
         </div>
-      )}
+        <div className="p-4 bg-white border-2 border-black text-center">
+          <div className="text-[10px] text-black/70 font-black uppercase tracking-[0.12em]">Location</div>
+          <div className="text-base font-bold text-black">{weather?.locationName || city || '-'}</div>
+        </div>
+        <div className="p-4 bg-white border-2 border-black text-center">
+          <div className="text-[10px] text-black/70 font-black uppercase tracking-[0.12em]">Updated</div>
+          <div className="text-base font-bold text-black">{new Date().toLocaleTimeString()}</div>
+        </div>
+      </div>
     </Card>
   )
 }

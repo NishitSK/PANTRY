@@ -1,14 +1,11 @@
 'use client'
 
-import { signOut, useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+import { useUser, useClerk } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import SectionHeading from '@/components/ui/SectionHeading'
-import Card from '@/components/ui/Card'
-import { Button } from '@/components/ui/shadcn-button'
-import { getApiBaseUrl } from '@/lib/api'
-import { Package, Calendar, MapPin, Banknote, User as UserIcon, Mail, ArrowLeft, LogOut } from 'lucide-react'
+import { Package, Calendar, MapPin, User as UserIcon, ArrowLeft, LogOut, ShieldCheck, Sparkles, Award } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -21,7 +18,9 @@ const formatDate = (dateString: string) => {
 }
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { user, isLoaded, isSignedIn } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,16 +32,16 @@ export default function ProfilePage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      redirect('/auth/login')
+    if (isLoaded && !isSignedIn) {
+      router.push('/auth/login')
     }
-  }, [status])
+  }, [isLoaded, isSignedIn])
 
   useEffect(() => {
-    if (session?.user?.email) {
+    if (user?.primaryEmailAddress?.emailAddress) {
       fetchUserProfile()
     }
-  }, [session])
+  }, [user])
 
   const fetchUserProfile = async () => {
     try {
@@ -69,19 +68,19 @@ export default function ProfilePage() {
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city: formData.city }) // Currently API only supports updating city
+        body: JSON.stringify({ city: formData.city })
       })
 
       if (response.ok) {
-        setMessage('Profile updated successfully!')
+        setMessage('Your curator identity has been updated.')
         setProfile({ ...profile, ...formData })
         setEditMode(false)
         setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Failed to update profile')
+        setMessage('Failed to update identity.')
       }
     } catch (error) {
-      setMessage('An error occurred')
+      setMessage('An error occurred.')
     } finally {
       setSaving(false)
     }
@@ -89,8 +88,13 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+        >
+            <Sparkles className="h-10 w-10 text-gold shadow-gold-glow" />
+        </motion.div>
       </div>
     )
   }
@@ -98,163 +102,202 @@ export default function ProfilePage() {
   if (!profile) return null
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="mb-8">
-        <Link href="/dashboard" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group px-4 py-2 rounded-full hover:bg-muted/50">
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
-        </Link>
-      </div>
-
-      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-serif font-medium text-foreground tracking-tight">My Profile</h1>
-          <p className="text-muted-foreground mt-2 text-lg font-light">Manage your personal information and view your stats.</p>
-        </div>
-        {!editMode && (
-          <div className="flex gap-3">
-            <Button onClick={() => signOut({ callbackUrl: '/' })} variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full px-6">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-            <Button onClick={() => setEditMode(true)} variant="outline" className="rounded-full px-6 border-primary/20 hover:bg-primary/5 hover:text-primary">
-              Edit Profile
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {message && (
-        <div className={`p-4 mb-8 rounded-2xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.includes('success') ? 'bg-emerald-50/50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300' : 'bg-red-50/50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'}`}>
-          {message.includes('success') ? <div className="h-2 w-2 rounded-full bg-emerald-500" /> : <div className="h-2 w-2 rounded-full bg-red-500" />}
-          {message}
-        </div>
-      )}
-
-      <div className="grid gap-8 md:grid-cols-3">
-        {/* Left Column: User Card & Stats */}
-        <div className="space-y-6">
-          <Card className="p-8 flex flex-col items-center text-center border-border/50 !rounded-[2.5rem] bg-card/50 backdrop-blur-sm shadow-sm relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            <div className="relative">
-                <div className="h-28 w-28 rounded-[2rem] bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-4xl font-serif font-medium text-primary mb-6 shadow-inner ring-4 ring-background">
-                {profile.name?.charAt(0).toUpperCase() || 'U'}
+    <main className="min-h-screen overflow-x-hidden bg-[#F6F1E7] p-3 sm:p-6 font-manrope md:p-12">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Navigation & Header */}
+        <div className="mb-10 md:mb-14 flex flex-col justify-between gap-6 md:gap-8 md:flex-row md:items-center">
+            <div className="space-y-4">
+            <Link href="/dashboard" className="group inline-flex items-center border-2 border-black bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white">
+                    <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                    Archive to Dashboard
+                </Link>
+                <div className="flex items-center gap-3">
+              <span className="border-2 border-black bg-[#DDF5E3] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-black">Curator&apos;s Portfolio</span>
+              <div className="h-[2px] w-12 bg-black" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 bg-background p-1.5 rounded-xl shadow-sm">
-                    <div className="h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
-                </div>
+            <h1 className="font-noto-serif text-4xl sm:text-6xl text-black">The Curator&apos;s Identity</h1>
             </div>
-            
-            <h2 className="text-2xl font-serif font-bold text-foreground">{profile.name}</h2>
-            <p className="text-sm text-muted-foreground mb-6 font-medium">{profile.email}</p>
-            
-            <div className="w-full pt-6 border-t border-border/50">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" /> Member Since
-                </span>
-                <span className="font-semibold text-foreground">{formatDate(profile.createdAt)}</span>
-              </div>
-            </div>
-          </Card>
 
-          <Card className="p-6 border-border/50 !rounded-[2rem] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 border-emerald-100 dark:border-emerald-900/30">
-            <h3 className="font-medium text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
-              <Banknote className="w-4 h-4" /> Pantry Value
-            </h3>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-serif font-medium text-emerald-900 dark:text-emerald-100">
-                ₹{profile.stats?.totalValue?.toLocaleString('en-IN') || 0}
-              </span>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                <button 
+                  onClick={() => signOut({ redirectUrl: '/' })}
+              className="group min-h-11 flex items-center justify-center gap-3 border-2 border-black bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                >
+                    <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    Exit Kitchen
+                </button>
+                {!editMode && (
+                    <button 
+                        onClick={() => setEditMode(true)}
+                className="min-h-11 border-2 border-black bg-[#93E1A8] px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                    >
+                        Modify Identity
+                    </button>
+                )}
             </div>
-            <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-2 font-medium">
-              Estimated total value
-            </p>
-          </Card>
         </div>
 
-        {/* Right Column: Details & More Stats */}
-        <div className="md:col-span-2 space-y-6">
-          <Card className="p-8 border-border/50 !rounded-[2.5rem] shadow-sm">
-            <h3 className="font-serif text-2xl font-medium text-foreground mb-8">Personal Information</h3>
-            
-            <div className="space-y-6">
-              <div className="grid gap-3">
-                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <UserIcon className="w-4 h-4" /> Full Name
-                </label>
-                <input
-                  type="text"
-                  value={editMode ? formData.name : profile.name} // Note: API might not support name update yet, but UI is ready
-                  disabled={true} // Name update not in API yet
-                  className="w-full px-5 py-3.5 rounded-2xl border-2 border-transparent bg-muted/40 text-foreground cursor-not-allowed font-medium"
-                />
-              </div>
-
-              <div className="grid gap-3">
-                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> Email Address
-                </label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  className="w-full px-5 py-3.5 rounded-2xl border-2 border-transparent bg-muted/40 text-foreground cursor-not-allowed font-medium"
-                />
-              </div>
-
-              <div className="grid gap-3">
-                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> City / Location
-                </label>
-                <input
-                  type="text"
-                  value={editMode ? formData.city : profile.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  disabled={!editMode}
-                  placeholder="Enter your city"
-                  className={`w-full px-5 py-3.5 rounded-2xl border-2 bg-background text-foreground transition-all outline-none font-medium ${editMode ? 'border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10' : 'border-transparent bg-muted/40 pl-5'}`}
-                />
-              </div>
-
-              {editMode && (
-                <div className="flex justify-end gap-3 pt-6">
-                  <Button variant="ghost" onClick={() => {
-                    setEditMode(false)
-                    setFormData({ name: profile.name, city: profile.city })
-                  }} className="rounded-full px-6">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSave} disabled={saving} className="rounded-full px-8 shadow-lg shadow-primary/20">
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </Button>
+        <AnimatePresence>
+          {message && (
+            <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              className="mb-10 flex items-center gap-4 border-2 border-black bg-[#DDE8FF] p-4 shadow-[6px_6px_0_#000]"
+            >
+              <div className="border border-black bg-[#FFE66D] p-2">
+                <ShieldCheck className="h-5 w-5 text-black" />
                 </div>
-              )}
+              <p className="text-sm font-bold text-black">{message}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+            
+            {/* Dossier Sidebar */}
+            <div className="lg:col-span-4 space-y-8">
+              <div className="group relative overflow-hidden border-4 border-black bg-white p-6 sm:p-10 text-center shadow-[10px_10px_0_#000]">
+                    
+                    <div className="relative z-10">
+                        {user?.imageUrl ? (
+                     <img src={user.imageUrl} alt="Profile" className="mx-auto mb-8 h-32 w-32 border-4 border-black object-cover transition-transform duration-300 group-hover:scale-105" />
+                        ) : (
+                    <div className="mx-auto mb-8 flex h-32 w-32 items-center justify-center border-4 border-black bg-[#FFE66D] text-5xl font-noto-serif text-black transition-transform duration-300 group-hover:scale-105">
+                                 {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                        )}
+                  <h2 className="mb-2 font-noto-serif text-3xl sm:text-4xl italic tracking-tight text-black">{user?.fullName || profile.name}</h2>
+                  <p className="inline-block border-2 border-black bg-[#DDF5E3] px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-black">Premium Curator</p>
+                        
+                  <div className="mt-10 grid grid-cols-2 gap-6 border-t-2 border-black pt-6">
+                            <div className="text-left">
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-black/60">Items Guided</p>
+                      <p className="font-noto-serif text-3xl text-black">{profile.stats?.totalItems || 0}</p>
+                            </div>
+                            <div className="text-left">
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-black/60">Curation Value</p>
+                      <p className="font-noto-serif text-3xl text-black">₹{profile.stats?.totalValue?.toLocaleString('en-IN') || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+              <div className="group relative overflow-hidden border-4 border-black bg-white p-8 shadow-[10px_10px_0_#000]">
+                    <div className="flex items-center gap-4 mb-6">
+                  <div className="border-2 border-black bg-[#FFE66D] p-3 text-black">
+                            <Award className="h-6 w-6" />
+                        </div>
+                  <h3 className="font-noto-serif text-xl italic text-black">Kitchen Accomplishments</h3>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-black/70">Master Preservation</span>
+                    <span className="font-bold text-black">Lvl 4</span>
+                        </div>
+                  <div className="h-2 w-full overflow-hidden border border-black bg-[#F6F1E7]">
+                    <div className="h-full w-[70%] bg-[#93E1A8]" />
+                        </div>
+                    </div>
+                </div>
             </div>
-          </Card>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="p-6 border-border/50 !rounded-[2rem] flex items-center gap-5 hover:bg-muted/5 transition-colors">
-              <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-[1.2rem] text-blue-600 dark:text-blue-400 shadow-sm">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Items</p>
-                <p className="text-3xl font-serif font-medium text-foreground">{profile.stats?.totalItems || 0}</p>
-              </div>
-            </Card>
+            {/* Main Portfolio Content */}
+            <div className="lg:col-span-8 space-y-12">
+              <section className="relative border-4 border-black bg-white p-6 sm:p-10 shadow-[10px_10px_0_#000]">
+                    <div className="flex items-center gap-3 mb-10">
+                  <UserIcon className="h-4 w-4 text-black" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/65">Documentary Details</h3>
+                    </div>
+                    
+                    <div className="space-y-12">
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div className="space-y-3 relative group">
+                              <label className="pl-1 text-[10px] font-black uppercase tracking-[0.16em] text-black/60">Legal Name</label>
+                              <div className="border-b-2 border-black py-3 font-noto-serif text-3xl italic text-black">
+                                    {profile.name}
+                                </div>
+                            </div>
+                             <div className="space-y-3 relative group">
+                              <label className="pl-1 text-[10px] font-black uppercase tracking-[0.16em] text-black/60">Communication Channel</label>
+                              <div className="border-b-2 border-black py-3 font-manrope text-xl font-semibold text-black">
+                                    {user?.primaryEmailAddress?.emailAddress || profile.email}
+                                </div>
+                            </div>
+                        </div>
 
-             <Card className="p-6 border-border/50 !rounded-[2rem] flex items-center gap-5 hover:bg-muted/5 transition-colors">
-              <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-[1.2rem] text-purple-600 dark:text-purple-400 shadow-sm">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Joined Year</p>
-                <p className="text-3xl font-serif font-medium text-foreground">{profile.createdAt ? new Date(profile.createdAt).getFullYear() : '-'}</p>
-              </div>
-            </Card>
-          </div>
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div className="space-y-3 relative group">
+                              <label className="pl-1 text-[10px] font-black uppercase tracking-[0.16em] text-black/60">Primary Location</label>
+                                {editMode ? (
+                                    <input
+                                        type="text"
+                                        value={formData.city}
+                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                  className="w-full border-b-2 border-black bg-transparent py-3 font-manrope text-xl font-semibold text-black outline-none"
+                                        placeholder="Mumbai, IN"
+                                    />
+                                ) : (
+                                <div className="border-b-2 border-black py-3 font-manrope text-xl font-semibold text-black">
+                                        {profile.city || 'Undisclosed'}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="space-y-3 relative group">
+                              <label className="pl-1 text-[10px] font-black uppercase tracking-[0.16em] text-black/60">Established Since</label>
+                              <div className="flex items-center gap-3 border-b-2 border-black py-3 font-noto-serif text-3xl text-black">
+                                <Calendar className="h-4 w-4 text-black" />
+                                    {formatDate(profile.createdAt)}
+                                </div>
+                            </div>
+                        </div>
+
+                        {editMode && (
+                            <div className="flex flex-col sm:flex-row justify-end pt-8 gap-3 sm:gap-4">
+                                <button 
+                                    onClick={() => {
+                                        setEditMode(false)
+                                        setFormData({ name: profile.name, city: profile.city })
+                                    }}
+                                className="min-h-11 border-2 border-black bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleSave} 
+                                    disabled={saving}
+                                className="min-h-11 border-2 border-black bg-[#93E1A8] px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                                >
+                                    {saving ? 'Syncing...' : 'Seal Identity'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Dossier Footer */}
+                <div className="grid md:grid-cols-2 gap-8">
+                   <div className="flex items-center gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0_#000]">
+                    <div className="border-2 border-black bg-[#FFE66D] p-4 text-black">
+                            <Package className="w-6 h-6" />
+                        </div>
+                        <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-black/60">Digital Vault Version</p>
+                      <p className="font-noto-serif text-3xl text-black">V. 4.0.2 Curator Alpha</p>
+                        </div>
+                     </div>
+                   <div className="flex items-center gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0_#000]">
+                    <div className="border-2 border-black bg-[#FFE66D] p-4 text-black">
+                            <MapPin className="w-6 h-6" />
+                        </div>
+                        <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-black/60">Active Server Node</p>
+                      <p className="font-noto-serif text-3xl text-black">Primary Tier Mumbai</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
         </div>
       </div>
     </main>
